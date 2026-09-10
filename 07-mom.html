@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>宝妈端</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f7fa;display:flex;height:100vh}
+.sidebar{width:160px;background:linear-gradient(180deg,#ff6b9d,#c44569);color:#fff;display:flex;flex-direction:column}
+.sidebar-header{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,0.2)}
+.sidebar-header h2{font-size:16px}
+.sidebar-header p{font-size:11px;opacity:0.8;margin-top:4px}
+.nav-menu{flex:1;padding:12px 0}
+.nav-item{padding:14px 20px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px}
+.nav-item:hover{background:rgba(255,255,255,0.1)}
+.nav-item.active{background:rgba(255,255,255,0.2)}
+.nav-icon{font-size:16px}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.header{background:#fff;padding:16px 24px;border-bottom:1px solid #e8e8e8;display:flex;justify-content:space-between;align-items:center}
+.header-title{font-size:18px;font-weight:600}
+.header-info{font-size:13px;color:#666}
+.content{flex:1;overflow-y:auto;padding:20px}
+.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.card-title{font-size:14px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.card-subtitle{font-size:12px;color:#999;margin-bottom:8px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat-card{background:#fff;border-radius:12px;padding:16px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.stat-card .num{font-size:24px;font-weight:600;color:#ff6b9d}
+.stat-card .label{font-size:12px;color:#666;margin-top:4px}
+.record-item{background:#fff5f7;border-radius:10px;padding:12px;margin-bottom:10px}
+.record-item-title{font-size:13px;font-weight:600;color:#c44569;margin-bottom:4px}
+.record-item-content{font-size:12px;color:#666}
+.record-item-meta{font-size:11px;color:#999;margin-top:4px}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.photo-item{aspect-ratio:1;border-radius:8px;overflow:hidden;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;position:relative}
+.photo-item .photo-label{position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.5);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px}
+.btn{padding:8px 16px;border:none;border-radius:20px;font-size:13px;cursor:pointer;transition:all 0.2s}
+.btn-primary{background:linear-gradient(135deg,#ff6b9d,#c44569);color:#fff}
+.btn-primary:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-secondary{background:#f5f5f5;color:#666}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-block{width:100%;margin-top:12px}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:4px}
+.tag-pink{background:#ffe0ec;color:#c44569}
+.tag-green{background:#e8f5e9;color:#2e7d32}
+.tag-blue{background:#e3f2fd;color:#1565c0}
+.tag-orange{background:#fff3e0;color:#e65100}
+.menu-item{padding:10px;border-bottom:1px solid #f0f0f0;font-size:13px}
+.menu-item:last-child{border-bottom:none}
+.menu-label{font-weight:600;color:#c44569;margin-bottom:4px;font-size:12px}
+.menu-items{font-size:12px;color:#666}
+.timeline{position:relative;padding-left:20px}
+.timeline::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:2px;background:#ffcdd2}
+.timeline-item{position:relative;padding-bottom:12px}
+.timeline-item::before{content:'';position:absolute;left:-17px;top:4px;width:10px;height:10px;border-radius:50%;background:#ff6b9d;border:2px solid #fff}
+.timeline-time{font-size:11px;color:#999}
+.timeline-content{font-size:12px;color:#333;margin-top:2px}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal{background:#fff;border-radius:16px;width:92%;max-width:600px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column}
+.modal-header{padding:16px 20px;border-bottom:1px solid #e8e8e8;display:flex;justify-content:space-between;align-items:center}
+.modal-body{padding:20px;overflow-y:auto;flex:1}
+.modal-footer{padding:16px 20px;border-top:1px solid #e8e8e8;display:flex;justify-content:flex-end;gap:8px}
+.hidden{display:none!important}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:13px;color:#666;margin-bottom:6px}
+.form-input{width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px}
+.form-input:focus{outline:none;border-color:#ff6b9d}
+.form-select{width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999}
+.share-preview{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+.share-preview-header{padding:20px;text-align:center;color:#fff}
+.share-preview-body{padding:20px}
+.share-preview-footer{padding:12px;text-align:center;font-size:12px}
+.template-options{display:flex;gap:10px;margin-bottom:16px}
+.template-option{padding:10px 16px;border:2px solid #e0e0e0;border-radius:8px;cursor:pointer;font-size:12px}
+.template-option.selected{border-color:#ff6b9d;background:#fff0f5}
+.empty-state{text-align:center;padding:40px;color:#999}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.photo-detail{font-size:80px;padding:40px;background:#f5f5f5;border-radius:12px}
+.meal-photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+.meal-photo-item{aspect-ratio:16/9;border-radius:8px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:40px}
+.day-selector{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.day-btn{padding:8px 16px;border:1px solid #e0e0e0;border-radius:20px;font-size:12px;cursor:pointer}
+.day-btn.active{background:#ff6b9d;color:#fff;border-color:#ff6b9d}
+.section-title{font-size:13px;font-weight:600;color:#666;margin:16px 0 8px 0}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-header"><h2>🌸 月子中心</h2><p>宝妈端</p></div>
+  <div class="nav-menu">
+    <div class="nav-item active" id="nav-home" onclick="showPage('home')"><span class="nav-icon">🏠</span>首页</div>
+    <div class="nav-item" id="nav-records" onclick="showPage('records')"><span class="nav-icon">📝</span>月子记录</div>
+    <div class="nav-item" id="nav-health" onclick="showPage('health')"><span class="nav-icon">💆</span>产康预约</div>
+    <div class="nav-item" id="nav-meals" onclick="showPage('meals')"><span class="nav-icon">🍽️</span>餐饮中心</div>
+    <div class="nav-item" id="nav-history" onclick="showPage('history')"><span class="nav-icon">📅</span>历史记录</div>
+    <div class="nav-item" id="nav-feedback" onclick="showPage('feedback')"><span class="nav-icon">💬</span>我的反馈</div>
+  </div>
+  <div style="padding:16px;border-top:1px solid rgba(255,255,255,0.2);font-size:11px;color:rgba(255,255,255,0.7);text-align:center">李女士 · 101房</div>
+</div>
+<div class="main">
+  <div class="header"><h1 class="header-title" id="page-title">首页</h1><span class="header-info" id="page-date"></span></div>
+  <div class="content" id="content-area"></div>
+</div>
+<div id="modal-share" class="modal-overlay hidden">
+  <div class="modal" style="max-width:650px">
+    <div class="modal-header"><h3>生成分享图片</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-share')">关闭</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">选择模板</label>
+        <div class="template-options">
+          <div class="template-option selected" onclick="selectTemplate(this,'warm')">温馨风</div>
+          <div class="template-option" onclick="selectTemplate(this,'minimal')">简约风</div>
+          <div class="template-option" onclick="selectTemplate(this,'cute')">可爱风</div>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">添加文字（可选）</label>
+        <textarea class="form-input" id="share-text" rows="2" placeholder="写下今天的心情..."></textarea>
+      </div>
+      <div id="share-preview"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-share')">取消</button>
+      <button class="btn btn-primary" onclick="generateShareImage()">生成图片</button>
+    </div>
+  </div>
+</div>
+<div id="modal-photo" class="modal-overlay hidden">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header"><h3 id="photo-modal-title">照片详情</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-photo')">关闭</button></div>
+    <div class="modal-body" style="text-align:center" id="photo-modal-content"></div>
+  </div>
+</div>
+<div id="modal-appointment" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>新建产康预约</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-appointment')">关闭</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">选择项目</label>
+        <select class="form-select" id="appointment-project">
+          <option>乳腺疏通</option><option>盆底肌修复</option><option>腹直肌修复</option><option>骨盆调理</option><option>中药泡脚</option><option>肩颈按摩</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">预约日期</label><input type="date" class="form-input" id="appointment-date" value="2024-01-21"></div>
+      <div class="form-group"><label class="form-label">预约时间</label>
+        <select class="form-select" id="appointment-time">
+          <option>09:00</option><option>10:00</option><option>11:00</option><option>14:00</option><option>15:00</option><option>16:00</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">备注</label><textarea class="form-input" id="appointment-note" rows="2" placeholder="如有特殊需求请说明"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-appointment')">取消</button><button class="btn btn-primary" onclick="submitAppointment()">提交预约</button></div>
+  </div>
+</div>
+<script src="data.js"></script>
+<script>
+var currentPage='home';
+var currentTemplate='warm';
+var selectedDate='2024-01-20';
+var currentRoom='101';
+
+function showPage(page){
+  currentPage=page;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('nav-'+page).classList.add('active');
+  var titles={home:'首页',records:'月子生活记录',health:'产康预约',meals:'餐饮中心',history:'历史记录',feedback:'我的反馈'};
+  document.getElementById('page-title').textContent=titles[page];
+  var contentArea=document.getElementById('content-area');
+  if(page==='home')contentArea.innerHTML=renderHome();
+  else if(page==='records')contentArea.innerHTML=renderRecords();
+  else if(page==='health')contentArea.innerHTML=renderHealth();
+  else if(page==='meals')contentArea.innerHTML=renderMeals();
+  else if(page==='history')contentArea.innerHTML=renderHistory();
+  else if(page==='feedback')contentArea.innerHTML=renderFeedback();
+}
+
+function renderHome(){
+  var todayData=centerData.babyRecords[selectedDate]||centerData.babyRecords['2024-01-20'];
+  var momData=centerData.momRecords[selectedDate]||centerData.momRecords['2024-01-20'];
+  var feedCount=todayData.feeding.length;
+  var sleepTotal=todayData.sleep.reduce((s,r)=>s+parseFloat(r.duration),0).toFixed(1);
+  var diaperCount=todayData.diaper.length;
+  var nextAppoint=centerData.appointments.find(a=>a.status==='confirmed'&&a.date>=selectedDate);
+  var todayMeals=centerData.weeklyMenu[0].meals;
+  var html='';
+  html+='<div class="grid-4">';
+  html+='<div class="stat-card"><div class="num">'+feedCount+'</div><div class="label">今日喂养</div></div>';
+  html+='<div class="stat-card"><div class="num">'+sleepTotal+'h</div><div class="label">宝宝睡眠</div></div>';
+  html+='<div class="stat-card"><div class="num">'+todayData.diaper.filter(d=>d.type==='大便').length+'</div><div class="label">排便次数</div></div>';
+  html+='<div class="stat-card"><div class="num">'+todayData.temp[0].value+'</div><div class="label">宝宝体温</div></div>';
+  html+='</div>';
+  html+='<div class="grid-2">';
+  html+='<div class="card"><div class="card-title">🍼 今日喂养记录</div>';
+  html+='<div class="timeline">';
+  todayData.feeding.forEach(r=>{
+    html+='<div class="timeline-item"><div class="timeline-time">'+r.time+'</div>';
+    html+='<div class="timeline-content">'+r.type+' · '+r.amount+(r.notes?' · '+r.notes:'')+'</div></div>';
+  });
+  html+='</div></div>';
+  html+='<div class="card"><div class="card-title">💆 今日产康安排</div>';
+  if(nextAppoint){
+    html+='<div class="record-item"><div class="record-item-title">'+nextAppoint.time+' · '+nextAppoint.project+'</div>';
+    html+='<div class="record-item-content">'+nextAppoint.therapist+'</div>';
+    html+='<div class="record-item-meta">状态：'+(nextAppoint.status==='confirmed'?'已确认':'待确认')+'</div></div>';
+  }else{
+    html+='<div class="empty-state" style="padding:20px"><div class="icon">📅</div><div>今日无产康安排</div></div>';
+  }
+  html+='</div></div>';
+  html+='<div class="grid-2">';
+  html+='<div class="card"><div class="card-title">🍽️ 今日餐饮</div>';
+  todayMeals.forEach(m=>{
+    html+='<div class="menu-item"><div class="menu-label">'+m.name+'</div><div class="menu-items">'+m.items.join('、')+'</div></div>';
+  });
+  html+='<button class="btn btn-secondary btn-sm btn-block" onclick="showPage(\'meals\')">查看完整菜单</button>';
+  html+='</div>';
+  html+='<div class="card"><div class="card-title">📸 今日照片</div>';
+  html+='<div class="photo-grid">';
+  (centerData.carePhotos[selectedDate]||[]).slice(0,6).forEach(p=>{
+    html+='<div class="photo-item" style="background:'+p.color+';font-size:32px" onclick="viewPhoto(\''+selectedDate+'\','+p.id+')">'+p.emoji+'<span class="photo-label">'+p.label+'</span></div>';
+  });
+  html+='</div></div></div>';
+  html+='<div class="card"><div class="card-title">👶 宝宝健康指标</div>';
+  html+='<div class="grid-3">';
+  html+='<div class="stat-card"><div class="num">'+todayData.temp[0].value+'</div><div class="label">体温</div></div>';
+  html+='<div class="stat-card"><div class="num">'+todayData.jaundice[0].value+'</div><div class="label">黄疸值</div></div>';
+  html+='<div class="stat-card"><div class="num">'+momData.temp[0].value+'</div><div class="label">宝妈体温</div></div>';
+  html+='</div></div>';
+  html+='<div class="card"><div class="card-title">📝 月子生活分享</div>';
+  html+='<div style="font-size:13px;color:#666;margin-bottom:12px">记录宝贝成长的每一天，分享温馨时刻</div>';
+  html+='<button class="btn btn-primary" onclick="openShareModal()">✨ 生成分享图片</button>';
+  html+='</div>';
+  return html;
+}
+
+function renderRecords(){
+  var todayData=centerData.babyRecords[selectedDate]||centerData.babyRecords['2024-01-20'];
+  var momData=centerData.momRecords[selectedDate]||centerData.momRecords['2024-01-20'];
+  var html='';
+  html+='<div class="day-selector"><div class="day-btn active" onclick="switchDate(\''+selectedDate+'\')">今日</div>';
+  html+='<div class="day-btn" onclick="switchDate(\'2024-01-19\')">昨日</div></div>';
+  html+='<div class="card"><div class="card-title">👶 宝宝护理记录</div>';
+  html+='<div class="grid-2">';
+  html+='<div><div class="card-subtitle">🍼 喂养记录（共'+todayData.feeding.length+'次）</div>';
+  todayData.feeding.forEach(r=>{
+    html+='<div class="record-item"><div class="record-item-title">'+r.time+' · '+r.type+'</div>';
+    html+='<div class="record-item-content">'+r.amount+(r.duration?' · '+r.duration+'':'')+(r.notes?' · '+r.notes:'')+'</div></div>';
+  });
+  html+='</div>';
+  html+='<div><div class="card-subtitle">😴 睡眠记录（共'+todayData.sleep.length+'次）</div>';
+  todayData.sleep.forEach(r=>{
+    html+='<div class="record-item"><div class="record-item-title">'+r.time+'</div>';
+    html+='<div class="record-item-content">'+r.duration+(r.quality?' · '+r.quality:'')+(r.notes?' · '+r.notes:'')+'</div></div>';
+  });
+  html+='</div></div></div>';
+  html+='<div class="card"><div class="card-title">📊 宝宝健康指标</div>';
+  html+='<div class="grid-3">';
+  html+='<div class="stat-card"><div class="num">'+todayData.temp[0].value+'</div><div class="label">体温</div></div>';
+  html+='<div class="stat-card"><div class="num">'+todayData.jaundice[0].value+'</div><div class="label">黄疸值</div></div>';
+  html+='<div class="stat-card"><div class="num">'+todayData.diaper.filter(d=>d.type==='大便').length+'</div><div class="label">排便次数</div></div>';
+  html+='</div></div>';
+  html+='<div class="card"><div class="card-title">💩 排泄记录</div>';
+  html+='<div class="grid-2">';
+  html+='<div><div class="card-subtitle">🚽 小便</div>';
+  todayData.diaper.filter(d=>d.type==='小便').forEach(r=>{
+    html+='<div class="record-item"><div class="record-item-title">'+r.time+'</div><div class="record-item-content">'+r.amount+' · '+r.color+'</div></div>';
+  });
+  html+='</div>';
+  html+='<div><div class="card-subtitle">💩 大便</div>';
+  todayData.diaper.filter(d=>d.type==='大便').forEach(r=>{
+    html+='<div class="record-item"><div class="record-item-title">'+r.time+'</div><div class="record-item-content">'+r.amount+' · '+r.color+(r.notes?' · '+r.notes:'')+'</div></div>';
+  });
+  html+='</div></div></div>';
+  html+='<div class="card"><div class="card-title">🧴 日常护理</div>';
+  todayData.care.forEach(r=>{
+    html+='<div class="record-item"><div class="record-item-title">'+r.time+' · '+r.item+'</div>';
+    html+='<div class="record-item-content">'+r.notes+(r.duration?' · '+r.duration:'')+'</div></div>';
+  });
+  html+='</div>';
+  html+='<div class="card"><div class="card-title">💆 宝妈护理记录</div>';
+  html+='<div class="grid-2">';
+  html+='<div><div class="card-subtitle">🌡️ 生命体征</div>';
+  html+='<div class="record-item"><div class="record-item-title">体温：'+momData.temp[0].value+'</div></div>';
+  html+='<div class="record-item"><div class="record-item-title">血压：'+momData.bloodPressure[0].value+'</div></div>';
+  html+='</div>';
+  html+='<div><div class="card-subtitle">📋 恢复情况</div>';
+  html+='<div class="record-item"><div class="record-item-title">恶露：'+momData.lochia[0].value+'</div></div>';
+  html+='<div class="record-item"><div class="record-item-title">伤口：'+momData.wound[0].value+'</div></div>';
+  html+='<div class="record-item"><div class="record-item-title">乳房：'+momData.breast[0].value+'</div></div>';
+  html+='</div></div></div>';
+  html+='<div class="card"><div class="card-title">📸 今日护理照片</div>';
+  html+='<div class="photo-grid">';
+  (centerData.carePhotos[selectedDate]||[]).forEach(p=>{
+    html+='<div class="photo-item" style="background:'+p.color+';font-size:32px" onclick="viewPhoto(\''+selectedDate+'\','+p.id+')">'+p.emoji+'<span class="photo-label">'+p.label+'</span></div>';
+  });
+  html+='</div></div>';
+  html+='<button class="btn btn-primary btn-block" onclick="openShareModal()">✨ 生成今日分享图片</button>';
+  return html;
+}
+
+function renderHealth(){
+  var html='';
+  html+='<div class="card"><div class="card-title">📅 我的产康预约</div>';
+  if(centerData.appointments.length===0){
+    html+='<div class="empty-state"><div class="icon">📅</div><div>暂无预约</div></div>';
+  }else{
+    centerData.appointments.forEach(a=>{
+      html+='<div class="record-item" style="display:flex;justify-content:space-between;align-items:center">';
+      html+='<div><div class="record-item-title">'+a.project+'</div>';
+      html+='<div class="record-item-content">'+a.date+' '+a.time+' · '+a.therapist+'</div>';
+      if(a.notes)html+='<div class="record-item-meta">'+a.notes+'</div>';
+      html+='</div>';
+      html+='<div><span class="tag '+(a.status==='confirmed'?'tag-green':'tag-orange')+'">'+(a.status==='confirmed'?'已确认':'待确认')+'</span>';
+      if(a.status==='confirmed'){
+        html+='<button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="cancelAppointment('+a.id+')">取消</button>';
+      }
+      html+='</div></div>';
+    });
+  }
+  html+='<button class="btn btn-primary btn-block" onclick="openAppointmentModal()">+ 新建预约</button>';
+  html+='</div>';
+  return html;
+}
+
+function renderMeals(){
+  var html='';
+  html+='<div class="card"><div class="card-title">📅 本周菜单</div>';
+  html+='<div class="day-selector">';
+  centerData.weeklyMenu.forEach((m,i)=>{
+    html+='<div class="day-btn'+(i===0?' active':'')+'" onclick="selectMenuDay(this,'+i+')">'+m.day+'</div>';
+  });
+  html+='</div>';
+  html+='<div id="menu-content">';
+  var todayMenu=centerData.weeklyMenu[0];
+  todayMenu.meals.forEach(m=>{
+    html+='<div class="menu-item"><div class="menu-label">'+m.name+'</div><div class="menu-items">'+m.items.join('、')+'</div></div>';
+  });
+  html+='</div></div>';
+  html+='<div class="card"><div class="card-title">📸 原材料照片</div>';
+  html+='<div class="photo-grid">';
+  (centerData.ingredientPhotos[selectedDate]||['🥬','🐔','🐟','🥛','🍚']).forEach((emoji,i)=>{
+    html+='<div class="photo-item" style="background:#e8f5e9;font-size:36px">'+emoji+'</div>';
+  });
+  html+='<div style="font-size:11px;color:#999;text-align:center;padding:8px">每日新鲜送达</div>';
+  html+='</div></div>';
+  html+='<div class="card"><div class="card-title">🍽️ 今日菜品照片</div>';
+  var todayMeals=centerData.mealPhotos[selectedDate]||{};
+  Object.keys(todayMeals).forEach(mealName=>{
+    html+='<div class="section-title">'+mealName+'</div>';
+    html+='<div class="meal-photo-grid">';
+    todayMeals[mealName].forEach((item,i)=>{
+      html+='<div class="meal-photo-item" style="font-size:32px">'+item+'</div>';
+    });
+    html+='</div>';
+  });
+  if(Object.keys(todayMeals).length===0){
+    html+='<div class="empty-state" style="padding:20px"><div class="icon">🍽️</div><div>暂无菜品照片</div></div>';
+  }
+  html+='</div>';
+  html+='<div class="card"><div class="card-title">🥗 特殊饮食需求</div>';
+  if(centerData.specialDiets.length===0){
+    html+='<div class="empty-state" style="padding:20px"><div class="icon">🥗</div><div>暂无特殊饮食需求</div></div>';
+  }else{
+    centerData.specialDiets.forEach(d=>{
+      html+='<div class="record-item"><div class="record-item-title">'+d.diet+'</div>';
+      html+='<div class="record-item-content">原因：'+d.reason+'</div>';
+      html+='<div class="record-item-meta">状态：'+d.status+'</div></div>';
+    });
+  }
+  html+='<button class="btn btn-secondary btn-block" onclick="submitSpecialDiet()">提交特殊饮食需求</button>';
+  html+='</div>';
+  return html;
+}
+
+function renderHistory(){
+  var html='';
+  html+='<div class="card"><div class="card-title">📅 选择日期</div>';
+  html+='<div class="day-selector">';
+  html+='<div class="day-btn active" onclick="loadHistory(\'2024-01-20\')">01-20</div>';
+  html+='<div class="day-btn" onclick="loadHistory(\'2024-01-19\')">01-19</div>';
+  html+='<div class="day-btn" onclick="loadHistory(\'2024-01-18\')">01-18</div>';
+  html+='</div></div>';
+  html+='<div id="history-content"></div>';
+  return html;
+}
+
+function loadHistory(date){
+  selectedDate=date;
+  var data=centerData.babyRecords[date];
+  var momData=centerData.momRecords[date];
+  if(!data){
+    document.getElementById('history-content').innerHTML='<div class="card"><div class="empty-state"><div class="icon">📅</div><div>暂无该日期记录</div></div></div>';
+    return;
+  }
+  document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  var html='';
+  html+='<div class="card"><div class="card-title">👶 宝宝护理记录</div>';
+  html+='<div class="grid-2">';
+  html+='<div><div class="card-subtitle">🍼 喂养（共'+data.feeding.length+'次）</div>';
+  data.feeding.forEach(r=>{
+    html+='<div class="record-item"><div class="record-item-title">'+r.time+' · '+r.type+'</div><div class="record-item-content">'+r.amount+(r.duration?' · '+r.duration:'')+'</div></div>';
+  });
+  html+='</div>';
+  html+='<div><div class="card-subtitle">😴 睡眠（共'+data.sleep.length+'次）</div>';
+  data.sleep.forEach(r=>{
+    html+='<div class="record-item"><div class="record-item-title">'+r.time+'</div><div class="record-item-content">'+r.duration+(r.quality?' · '+r.quality:'')+'</div></div>';
+  });
+  html+='</div></div></div>';
+  html+='<div class="card"><div class="card-title">📊 健康指标</div>';
+  html+='<div class="grid-3">';
+  html+='<div class="stat-card"><div class="num">'+data.temp[0].value+'</div><div class="label">体温</div></div>';
+  html+='<div class="stat-card"><div class="num">'+data.jaundice[0].value+'</div><div class="label">黄疸值</div></div>';
+  html+='<div class="stat-card"><div class="num">'+momData.temp[0].value+'</div><div class="label">宝妈体温</div></div>';
+  html+='</div></div>';
+  html+='<div class="card"><div class="card-title">📸 护理照片</div>';
+  html+='<div class="photo-grid">';
+  (centerData.carePhotos[date]||[]).forEach((p,i)=>{
+    html+='<div class="photo-item" style="background:'+p.color+';font-size:32px" onclick="viewHistoryPhoto(\''+date+'\','+p.id+')">'+p.emoji+'<span class="photo-label">'+p.label+'</span></div>';
+  });
+  html+='</div></div>';
+  html+='<button class="btn btn-primary btn-block" onclick="openShareHistoryModal(\''+date+'\')">✨ 生成历史分享图片</button>';
+  document.getElementById('history-content').innerHTML=html;
+}
+
+function renderFeedback(){
+  var html='';
+  html+='<div class="card"><div class="card-title">💬 我的反馈记录</div>';
+  if(centerData.feedbacks.length===0){
+    html+='<div class="empty-state"><div class="icon">💬</div><div>暂无反馈记录</div></div>';
+  }else{
+    centerData.feedbacks.forEach(f=>{
+      html+='<div class="record-item" style="margin-bottom:12px">';
+      html+='<div style="display:flex;justify-content:space-between"><div class="record-item-title">'+f.content+'</div>';
+      html+='<span class="tag '+(f.status==='已处理'?'tag-green':'tag-orange')+'">'+f.status+'</span></div>';
+      html+='<div class="record-item-meta">'+f.time+' · '+f.type+'</div>';
+      if(f.reply){
+        html+='<div style="margin-top:8px;padding:8px;background:#f5f5f5;border-radius:6px;font-size:12px;color:#666">主管回复：'+f.reply+'</div>';
+      }
+      html+='</div>';
+    });
+  }
+  html+='<button class="btn btn-primary btn-block" onclick="submitFeedback()">提交新反馈</button>';
+  html+='</div>';
+  return html;
+}
+
+function selectTemplate(el,template){
+  document.querySelectorAll('.template-option').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  currentTemplate=template;
+  renderSharePreview();
+}
+
+function openShareModal(){
+  document.getElementById('share-text').value='';
+  renderSharePreview();
+  document.getElementById('modal-share').classList.remove('hidden');
+}
+
+function openShareHistoryModal(date){
+  selectedDate=date;
+  document.getElementById('share-text').value='';
+  renderSharePreview();
+  document.getElementById('modal-share').classList.remove('hidden');
+}
+
+function renderSharePreview(){
+  var templateStyles={
+    warm:{bg:'linear-gradient(135deg,#ffe0ec,#ffcdd2)',accent:'#c44569',text:'#fff'},
+    minimal:{bg:'linear-gradient(135deg,#f5f5f5,#e0e0e0)',accent:'#666',text:'#333'},
+    cute:{bg:'linear-gradient(135deg,#e3f2fd,#bbdefb)',accent:'#1565c0',text:'#fff'}
+  };
+  var style=templateStyles[currentTemplate];
+  var today=centerData.babyRecords[selectedDate]||centerData.babyRecords['2024-01-20'];
+  var momToday=centerData.momRecords[selectedDate]||centerData.momRecords['2024-01-20'];
+  var feedCount=today.feeding.length;
+  var sleepTotal=today.sleep.reduce((s,r)=>s+parseFloat(r.duration),0).toFixed(1);
+  var diaperCount=today.diaper.filter(d=>d.type==='大便').length;
+  var photos=centerData.carePhotos[selectedDate]||[];
+  var mealPhotos=centerData.mealPhotos[selectedDate]||{};
+  var html='<div class="share-preview" id="share-preview-content">';
+  html+='<div style="background:'+style.bg+';padding:24px;text-align:center;color:'+style.text+'">';
+  html+='<div style="font-size:20px;font-weight:600;margin-bottom:4px">🌸 月子生活日记</div>';
+  html+='<div style="font-size:12px;opacity:0.8">'+selectedDate+'</div>';
+  html+='</div>';
+  html+='<div style="padding:20px;background:#fff">';
+  if(currentTemplate==='warm'){
+    html+='<div style="text-align:center;margin-bottom:16px"><span style="font-size:56px">👶</span></div>';
+  }
+  html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center;margin-bottom:16px">';
+  html+='<div><div style="font-size:28px;font-weight:600;color:'+style.accent+'">'+feedCount+'</div><div style="font-size:12px;color:#999">喂养次数</div></div>';
+  html+='<div><div style="font-size:28px;font-weight:600;color:'+style.accent+'">'+sleepTotal+'h</div><div style="font-size:12px;color:#999">宝宝睡眠</div></div>';
+  html+='<div><div style="font-size:28px;font-weight:600;color:'+style.accent+'">'+today.temp[0].value+'</div><div style="font-size:12px;color:#999">宝宝体温</div></div>';
+  html+='</div>';
+  if(photos.length>0){
+    html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">';
+    photos.slice(0,6).forEach(p=>{
+      html+='<div style="aspect-ratio:1;background:'+p.color+';border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:32px">'+p.emoji+'</div>';
+    });
+    html+='</div>';
+  }
+  var userText=document.getElementById('share-text').value;
+  if(userText){
+    html+='<div style="margin-top:16px;padding:12px;background:#fff5f7;border-radius:8px;font-size:13px;color:#666;text-align:center">"'+userText+'"</div>';
+  }
+  html+='</div>';
+  html+='<div style="background:'+style.bg+';padding:12px;text-align:center;font-size:12px;color:'+style.text+'">📍 XX月子中心 · 用心呵护每一天</div>';
+  html+='</div>';
+  document.getElementById('share-preview').innerHTML=html;
+}
+
+function generateShareImage(){
+  showToast('图片已生成，可长按保存到相册分享到朋友圈');
+  closeModal('modal-share');
+}
+
+function viewPhoto(date,photoId){
+  var photo=(centerData.carePhotos[date]||[]).find(p=>p.id===photoId);
+  if(photo){
+    document.getElementById('photo-modal-title').textContent=photo.label;
+    document.getElementById('photo-modal-content').innerHTML='<div class="photo-detail" style="background:'+photo.color+'">'+photo.emoji+'</div><div style="margin-top:12px;font-size:14px;color:#666">'+date+' · '+photo.time+' · '+photo.label+'</div>';
+    document.getElementById('modal-photo').classList.remove('hidden');
+  }
+}
+
+function viewHistoryPhoto(date,index){
+  var photo=(centerData.carePhotos[date]||[])[index];
+  if(photo){
+    document.getElementById('photo-modal-title').textContent=photo.label;
+    document.getElementById('photo-modal-content').innerHTML='<div class="photo-detail" style="background:'+photo.color+'">'+photo.emoji+'</div><div style="margin-top:12px;font-size:14px;color:#666">'+date+' · '+photo.label+'</div>';
+    document.getElementById('modal-photo').classList.remove('hidden');
+  }
+}
+
+function openAppointmentModal(){
+  document.getElementById('modal-appointment').classList.remove('hidden');
+}
+
+function submitAppointment(){
+  var project=document.getElementById('appointment-project').value;
+  var date=document.getElementById('appointment-date').value;
+  var time=document.getElementById('appointment-time').value;
+  centerData.appointments.push({id:Date.now(),project,date,time,therapist:'分配产康师',status:'pending',notes:''});
+  closeModal('modal-appointment');
+  showToast('预约已提交，等待确认');
+  showPage('health');
+}
+
+function cancelAppointment(id){
+  if(confirm('确定要取消这个预约吗？')){
+    centerData.appointments=centerData.appointments.filter(a=>a.id!==id);
+    showToast('已取消预约');
+    showPage('health');
+  }
+}
+
+function submitSpecialDiet(){
+  var content=prompt('请描述您的特殊饮食需求：');
+  if(content){
+    centerData.specialDiets.push({room:'101房',name:'李女士',diet:content,reason:'个人需求',status:'待处理'});
+    showToast('需求已提交，厨房将尽快处理');
+    showPage('meals');
+  }
+}
+
+function submitFeedback(){
+  var content=prompt('请输入您的反馈或建议：');
+  if(content){
+    var type=confirm('这是建议吗？\n确定=建议，取消=反馈')?'建议':'反馈';
+    centerData.feedbacks.unshift({id:Date.now(),time:new Date().toLocaleString('zh-CN'),content,status:'待处理',reply:'',type:type});
+    showToast('反馈已提交');
+    showPage('feedback');
+  }
+}
+
+function switchDate(date){
+  selectedDate=date;
+  showPage(currentPage);
+}
+
+function selectMenuDay(el,index){
+  document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  var menu=centerData.weeklyMenu[index];
+  var html='';
+  menu.meals.forEach(m=>{
+    html+='<div class="menu-item"><div class="menu-label">'+m.name+'</div><div class="menu-items">'+m.items.join('、')+'</div></div>';
+  });
+  document.getElementById('menu-content').innerHTML=html;
+}
+
+function closeModal(modalId){
+  document.getElementById(modalId).classList.add('hidden');
+}
+
+function showToast(msg){
+  var t=document.createElement('div');
+  t.className='toast';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){t.remove();},3000);
+}
+
+document.getElementById('page-date').textContent=new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+showPage('home');
+</script>
+</body>
+</html>

@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>月子中心管理系统 — 主管端原型</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f7fa; display: flex; height: 100vh; overflow: hidden; }
+.sidebar { width: 180px; background: #1565c0; color: #fff; display: flex; flex-direction: column; }
+.sidebar-header { padding: 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar-header h2 { font-size: 15px; }
+.sidebar-header p { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+.nav-menu { flex: 1; padding: 12px 0; }
+.nav-item { padding: 14px 20px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: background 0.2s; }
+.nav-item:hover { background: rgba(255,255,255,0.1); }
+.nav-item.active { background: rgba(255,255,255,0.2); }
+.nav-footer { padding: 16px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: rgba(255,255,255,0.6); text-align: center; }
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.header { background: #fff; padding: 16px 24px; border-bottom: 1px solid #e8e8e8; display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 18px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.header-date { font-size: 13px; color: #666; }
+.badge { background: #f44336; color: #fff; border-radius: 10px; padding: 2px 8px; font-size: 12px; margin-left: 4px; }
+.content { flex: 1; overflow-y: auto; padding: 20px; }
+.card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.card-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center; }
+.stat-card .num { font-size: 28px; font-weight: 600; color: #1565c0; }
+.stat-card .label { font-size: 13px; color: #666; margin-top: 4px; }
+.record-list { display: flex; flex-direction: column; gap: 12px; }
+.record-item { background: #f8f9fa; border-radius: 8px; padding: 14px; border-left: 3px solid #1565c0; }
+.record-item.pending { border-left-color: #ff9800; }
+.record-item.reviewed { border-left-color: #4caf50; }
+.record-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.record-header .title { font-size: 14px; font-weight: 500; }
+.record-header .meta { font-size: 12px; color: #999; }
+.record-body { font-size: 13px; color: #555; line-height: 1.6; }
+.record-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 4px; }
+.tag-service { background: #e0f2f1; color: #00695c; }
+.tag-baby { background: #e3f2fd; color: #1565c0; }
+.tag-mom { background: #fce4ec; color: #c62828; }
+.tag-emergency { background: #fff3e0; color: #e65100; }
+.tag-staff { background: #f3e5f5; color: #6a1b9a; }
+.tag-mama { background: #e8f5e9; color: #2e7d32; }
+.btn { padding: 6px 14px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+.btn-primary { background: #1565c0; color: #fff; }
+.btn-secondary { background: #f5f5f5; color: #333; }
+.btn-warning { background: #ff9800; color: #fff; }
+.btn-success { background: #4caf50; color: #fff; }
+.btn-danger { background: #f44336; color: #fff; }
+.btn:hover { opacity: 0.9; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: #fff; border-radius: 16px; width: 92%; max-width: 600px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+.modal-header { padding: 16px 20px; border-bottom: 1px solid #e8e8e8; display: flex; justify-content: space-between; align-items: center; }
+.modal-header h3 { font-size: 16px; }
+.modal-close { width: 32px; height: 32px; border: none; background: #f5f5f5; border-radius: 50%; cursor: pointer; font-size: 18px; }
+.modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+.modal-footer { padding: 16px 20px; border-top: 1px solid #e8e8e8; display: flex; justify-content: flex-end; gap: 8px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; color: #333; margin-bottom: 6px; font-weight: 500; }
+.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+.form-group textarea { min-height: 80px; resize: vertical; }
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 9999; animation: fadeIn 0.3s; }
+@keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.hidden { display: none !important; }
+.tab-nav { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; }
+.tab-item { padding: 8px 16px; cursor: pointer; border-radius: 20px; font-size: 13px; }
+.tab-item.active { background: #1565c0; color: #fff; }
+.assignee-list { display: flex; gap: 8px; flex-wrap: wrap; }
+.assignee-item { padding: 6px 12px; background: #f5f5f5; border-radius: 16px; font-size: 12px; cursor: pointer; border: 1px solid transparent; }
+.assignee-item.selected { background: #e3f2fd; border-color: #1565c0; color: #1565c0; }
+.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-btn { padding: 6px 14px; background: #f5f5f5; border: none; border-radius: 20px; font-size: 13px; cursor: pointer; }
+.filter-btn.active { background: #1565c0; color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h2>🏥 月子中心</h2>
+    <p>主管端原型</p>
+  </div>
+  <div class="nav-menu">
+    <div class="nav-item active" id="nav-home" onclick="showPage('home')"><span>🏠</span> 首页</div>
+    <div class="nav-item" id="nav-review" onclick="showPage('review')"><span>✅</span> 审核待办 <span class="badge" id="review-badge">5</span></div>
+    <div class="nav-item" id="nav-exception" onclick="showPage('exception')"><span>⚠️</span> 异常处理</div>
+    <div class="nav-item" id="nav-feedback" onclick="showPage('feedback')"><span>💬</span> 意见反馈 <span class="badge" id="feedback-badge">3</span></div>
+    <div class="nav-item" id="nav-stats" onclick="showPage('stats')"><span>📊</span> 统计概览</div>
+    <div class="nav-item" id="nav-history" onclick="showPage('history')"><span>📅</span> 历史记录</div>
+  </div>
+  <div class="nav-footer">主管：刘主管</div>
+</div>
+
+<div class="main">
+  <div class="header">
+    <h1 id="page-title">首页</h1>
+    <div class="header-right">
+      <span class="header-date" id="current-date">2024年1月16日 星期二</span>
+    </div>
+  </div>
+  <div class="content" id="content-area"></div>
+</div>
+
+
+<!-- 房间审核弹窗 -->
+<div id="modal-room-review" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>✅ 房间审核</h3><button class="modal-close" onclick="closeModal('modal-room-review')">×</button></div>
+    <div class="modal-body" id="room-review-content"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-room-review')">关闭</button>
+      <button class="btn btn-danger" onclick="rejectRoom()">驳回</button>
+      <button class="btn btn-success" onclick="approveRoom()">通过</button>
+    </div>
+  </div>
+</div>
+<!-- 审核详情弹窗 -->
+<div id="modal-review-detail" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📋 记录审核</h3>
+      <button class="modal-close" onclick="closeModal('modal-review-detail')">×</button>
+    </div>
+    <div class="modal-body" id="review-detail-content">
+      <!-- 动态填充 -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-review-detail')">关闭</button>
+      <button class="btn btn-danger" onclick="rejectRecord()">驳回</button>
+      <button class="btn btn-success" onclick="approveRecord()">通过</button>
+    </div>
+  </div>
+</div>
+
+<!-- 分配任务弹窗 -->
+<div id="modal-assign" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📤 分配任务</h3>
+      <button class="modal-close" onclick="closeModal('modal-assign')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>分配给</label>
+        <div class="assignee-list">
+          <div class="assignee-item" onclick="toggleAssignee(this)">育婴师-李老师</div>
+          <div class="assignee-item" onclick="toggleAssignee(this)">育婴师-王老师</div>
+          <div class="assignee-item" onclick="toggleAssignee(this)">产康师-李老师</div>
+          <div class="assignee-item" onclick="toggleAssignee(this)">产康师-张老师</div>
+          <div class="assignee-item" onclick="toggleAssignee(this)">店长</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>任务类型</label>
+        <select id="assign-type" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;">
+          <option value="yuying">育婴护理</option>
+          <option value="chankang">产康服务</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>处理要求</label>
+        <textarea id="assign-note" placeholder="请说明具体处理要求..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-assign')">取消</button>
+      <button class="btn btn-primary" onclick="submitAssign()">确认分配</button>
+    </div>
+  </div>
+</div>
+
+<!-- 意见反馈详情弹窗 -->
+<div id="modal-feedback-detail" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>💬 意见反馈详情</h3>
+      <button class="modal-close" onclick="closeModal('modal-feedback-detail')">×</button>
+    </div>
+    <div class="modal-body" id="feedback-detail-content">
+      <!-- 动态填充 -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-feedback-detail')">关闭</button>
+      <button class="btn btn-primary" onclick="openAssignModal()">分配处理</button>
+    </div>
+  </div>
+</div>
+
+<!-- 异常详情弹窗 -->
+<div id="modal-exception-detail" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>⚠️ 异常处理</h3>
+      <button class="modal-close" onclick="closeModal('modal-exception-detail')">×</button>
+    </div>
+    <div class="modal-body" id="exception-detail-content">
+      <!-- 动态填充 -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-exception-detail')">关闭</button>
+      <button class="btn btn-warning" onclick="handleException('pending')">标记处理中</button>
+      <button class="btn btn-success" onclick="handleException('resolved')">标记已解决</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPage = 'home';
+let currentReviewId = null;
+let currentFeedbackId = null;
+let currentExceptionId = null;
+let currentFilter = { review: "all", exception: "all", feedback: "all" };
+let currentHistoryRoom = '101';
+let currentHistoryDate = '2024-01-16';
+
+// ─── 审核待办数据 ───
+const reviewList = [
+  { id:1,  type:'baby', typeLabel:'宝宝记录', customer:'李女士（101房）', staff:'育婴师-李老师',
+    content:'宝宝今天喂养情况：母乳3次，瓶喂2次，总奶量约450ml。大便1次，黄色糊状。睡眠较好，共约14小时。',
+    createTime:'2024-01-16 10:30', status:'pending' },
+  { id:2,  type:'mom',  typeLabel:'宝妈记录', customer:'王女士（102房）', staff:'产康师-李老师',
+    content:'今天进行了盆底肌康复训练，完成3组，效果良好。恶露观察：量少，淡红色，无异味。',
+    createTime:'2024-01-16 09:30', status:'pending' },
+  { id:3,  type:'baby', typeLabel:'宝宝记录', customer:'张女士（103房）', staff:'育婴师-王老师',
+    content:'宝宝体温36.8°C，精神状态良好。黄疸值经皮测量8.2，在正常范围内。',
+    createTime:'2024-01-16 11:00', status:'pending' },
+  { id:4,  type:'mom',  typeLabel:'宝妈记录', customer:'陈女士（201房）', staff:'产康师-张老师',
+    content:'剖腹产伤口护理：切口愈合良好，无红肿渗液。进行了肩颈按摩，宝妈反馈舒适。',
+    createTime:'2024-01-16 14:00', status:'pending' },
+  { id:5,  type:'emergency', typeLabel:'异常上报', customer:'李女士（101房）', staff:'育婴师-李老师',
+    content:'宝宝出现轻微吐奶，已进行拍嗝处理，暂时观察中。建议关注下次喂养姿势。',
+    createTime:'2024-01-16 15:30', status:'pending' }
+];
+
+// ─── 已审核记录 ───
+const reviewedList = [
+  { id:6,  type:'baby', typeLabel:'宝宝记录', customer:'李女士（101房）', staff:'育婴师-李老师',
+    content:'宝宝今日喂养正常，睡眠良好，大小便正常。', createTime:'2024-01-15 16:00',
+    status:'approved', reviewTime:'2024-01-15 17:00', reviewNote:'记录完整，情况正常' },
+  { id:7,  type:'mom',  typeLabel:'宝妈记录', customer:'王女士（102房）', staff:'产康师-李老师',
+    content:'生命体征正常，恶露观察正常，伤口愈合良好。', createTime:'2024-01-15 15:00',
+    status:'approved', reviewTime:'2024-01-15 16:30', reviewNote:'恢复情况良好' }
+];
+
+// ─── 意见反馈数据 ───
+const feedbackList = [
+  { id:1, type:'mama', typeLabel:'宝妈建议', customer:'李女士（101房）',
+    content:'希望晚餐能增加一些汤品，现在汤的种类比较少。',
+    createTime:'2024-01-16 08:30', status:'pending', priority:'medium', assignee:'' },
+  { id:2, type:'mama', typeLabel:'宝妈建议', customer:'王女士（102房）',
+    content:'早上送来的水果不太新鲜，希望更换一下。',
+    createTime:'2024-01-16 09:00', status:'pending', priority:'high', assignee:'' },
+  { id:3, type:'staff', typeLabel:'员工反馈', customer:'-',
+    content:'育婴师反映103房宝宝最近睡眠不太好，经常哭闹，需要关注。',
+    createTime:'2024-01-16 10:00', status:'pending', priority:'high', assignee:'' }
+];
+
+// ─── 异常处理数据 ───
+const exceptionList = [
+  { id:1, type:'baby', typeLabel:'宝宝异常', customer:'张女士（103房）',
+    content:'宝宝体温37.8°C，略高于正常范围，已通知医生巡诊。',
+    createTime:'2024-01-16 14:00', status:'pending', handler:'' },
+  { id:2, type:'mom', typeLabel:'宝妈异常', customer:'陈女士（201房）',
+    content:'剖腹产伤口有轻微红肿，已拍照记录，等待医生处理。',
+    createTime:'2024-01-16 11:30', status:'pending', handler:'' },
+  { id:3, type:'service', typeLabel:'服务异常', customer:'李女士（101房）',
+    content:'产康师预约的肩颈按摩时间冲突，需要重新安排。',
+    createTime:'2024-01-16 09:30', status:'resolved', handler:'刘主管' }
+];
+
+const pageTitles = {
+  home:'首页', review:'审核待办', exception:'异常处理',
+  feedback:'意见反馈', stats:'统计概览', history:'历史记录'
+};
+
+// ─── 房间完整数据（含宝宝+宝妈每日详细记录） ───
+const roomDetailData = {
+  '101': {
+    name:'李女士', babyStaff:'育婴师-李老师', momStaff:'产康师-李老师',
+    babyInfo:{sex:'男',birthWeight:'3.2kg',birthDay:'第3天',temp:'36.8°C',jaundice:'8.2'},
+    babyVital:{temp:'36.8°C',resp:'40次/分',hr:'140次/分',jaundice:'8.2',spirit:'良好',cry:'有力',fontanelle:'正常',skin:'正常'},
+    babyFeed:[
+      {time:'06:30',type:'母乳',side:'左侧15分钟+右侧10分钟',amount:'-',swallow:'良好',spitup:'无',vomit:'无',burp:'已拍'},
+      {time:'10:00',type:'瓶喂',side:'-',amount:'60ml',swallow:'良好',spitup:'少量',vomit:'无',burp:'已拍'},
+      {time:'14:30',type:'母乳',side:'双侧各10分钟',amount:'-',swallow:'良好',spitup:'无',vomit:'无',burp:'已拍'}
+    ],
+    babyExcret:{urine:{count:'3次',color:'清亮',amount:'中'},stool:{count:'1次',color:'黄色',type:'糊状'}},
+    babyCare:{bathe:'已洗澡',touch:'已抚触',exercise:'已做被动操',swim:'未做',diaper:'已换4次',nail:'已剪',butt:'已护理'},
+    babySleep:{start:'22:00',duration:'14小时',pos:'仰卧',wake:'偶尔',soothe:'抱哄'},
+    babyMed:{name:'维生素D3',dose:'1滴',time:'早餐后',route:'口服',reaction:'无'},
+    babyException:{vomit:'无',distension:'无',gas:'无',sneeze:'无',cough:'无',fever:'无',diarrhea:'无',measure:'-',doctor:'-',note:'-'},
+    momInfo:{age:'28',delivery:'剖宫产',admitDay:'2024-01-13',height:'165cm',weight:'62kg'},
+    momVital:{temp:'36.9°C',pulse:'78次/分',resp:'18次/分',bp:'110/70mmHg',spo2:'98%'},
+    momUterus:{fundus:'脐下2横指',hardness:'硬',lochiaAmount:'中量',lochiaColor:'淡红色',lochiaSmell:'无味'},
+    momWound:{cesareanDressing:'干燥',cesareanRed:'无',cesareanHeal:'良好',perinealRed:'-',perinealPain:'-',perinealDisinfect:'-'},
+    momBreast:{swell:'轻度',milk:'充足',feedFreq:'每3小时',block:'无',massage:'已做'},
+    momExcret:{urineSmooth:'通畅',constipation:'无',gas:'已排气'},
+    momDiet:{breakfast:'小米粥+鸡蛋',lunch:'鲫鱼汤+蔬菜',dinner:'米饭+排骨',water:'1500ml',forbid:'辛辣',appetite:'良好',special:'高蛋白'},
+    momRehab:{uterus:'已做',pelvicFloor:'3组',herbWash:'已做',herbFoot:'已做',moxa:'已做',massage:'已做'},
+    momMed:{oral:'头孢克肟 0.1g 每日2次',topical:'碘伏消毒'},
+    momPsych:{sleep:'6小时',mood:'平稳',stress:'无'}
+  },
+  '102': {
+    name:'王女士', babyStaff:'育婴师-王老师', momStaff:'产康师-李老师',
+    babyInfo:{sex:'女',birthWeight:'3.0kg',birthDay:'第5天',temp:'36.7°C',jaundice:'7.5'},
+    babyVital:{temp:'36.7°C',resp:'38次/分',hr:'138次/分',jaundice:'7.5',spirit:'良好',cry:'有力',fontanelle:'正常',skin:'正常'},
+    babyFeed:[
+      {time:'07:00',type:'母乳',side:'双侧各12分钟',amount:'-',swallow:'良好',spitup:'无',vomit:'无',burp:'已拍'},
+      {time:'11:00',type:'母乳',side:'左侧15分钟',amount:'-',swallow:'良好',spitup:'少量',vomit:'无',burp:'已拍'}
+    ],
+    babyExcret:{urine:{count:'4次',color:'清亮',amount:'多'},stool:{count:'2次',color:'黄色',type:'糊状'}},
+    babyCare:{bathe:'已洗澡',touch:'已抚触',exercise:'已做被动操',swim:'已游泳',diaper:'已换5次',nail:'已剪',butt:'已护理'},
+    babySleep:{start:'21:30',duration:'13小时',pos:'仰卧',wake:'无',soothe:'-'},
+    babyMed:{name:'-',dose:'-',time:'-',route:'-',reaction:'-'},
+    babyException:{vomit:'无',distension:'无',gas:'无',sneeze:'无',cough:'无',fever:'无',diarrhea:'无',measure:'-',doctor:'-',note:'-'},
+    momInfo:{age:'26',delivery:'顺产',admitDay:'2024-01-11',height:'162cm',weight:'58kg'},
+    momVital:{temp:'36.6°C',pulse:'72次/分',resp:'16次/分',bp:'108/68mmHg',spo2:'99%'},
+    momUterus:{fundus:'脐下3横指',hardness:'硬',lochiaAmount:'少量',lochiaColor:'红色',lochiaSmell:'无味'},
+    momWound:{cesareanDressing:'-',cesareanRed:'-',cesareanHeal:'-',perinealRed:'无',perinealPain:'2分',perinealDisinfect:'已消毒'},
+    momBreast:{swell:'无',milk:'充足',feedFreq:'按需',block:'无',massage:'-'},
+    momExcret:{urineSmooth:'通畅',constipation:'无',gas:'已排气'},
+    momDiet:{breakfast:'红豆粥+鸡蛋',lunch:'鸡汤+蔬菜',dinner:'米饭+鱼类',water:'1800ml',forbid:'-',appetite:'良好',special:'催乳'},
+    momRehab:{uterus:'已做',pelvicFloor:'3组',herbWash:'已做',herbFoot:'已做',moxa:'-',massage:'已做'},
+    momMed:{oral:'-',topical:'-'},
+    momPsych:{sleep:'7小时',mood:'平稳',stress:'无'}
+  },
+  '103': {
+    name:'张女士', babyStaff:'育婴师-王老师', momStaff:'产康师-张老师',
+    babyInfo:{sex:'男',birthWeight:'3.5kg',birthDay:'第1天',temp:'36.5°C',jaundice:'6.8'},
+    babyVital:{temp:'36.5°C',resp:'42次/分',hr:'145次/分',jaundice:'6.8',spirit:'良好',cry:'有力',fontanelle:'正常',skin:'正常'},
+    babyFeed:[
+      {time:'08:00',type:'母乳',side:'双侧各5分钟',amount:'-',swallow:'良好',spitup:'无',vomit:'无',burp:'已拍'},
+      {time:'11:30',type:'母乳',side:'左侧10分钟',amount:'-',swallow:'良好',spitup:'少量',vomit:'无',burp:'已拍'}
+    ],
+    babyExcret:{urine:{count:'2次',color:'清亮',amount:'少'},stool:{count:'1次',color:'墨绿色',type:'胎便'}},
+    babyCare:{bathe:'已洗澡',touch:'已抚触',exercise:'已做被动操',swim:'未做',diaper:'已换3次',nail:'已剪',butt:'已护理'},
+    babySleep:{start:'22:30',duration:'12小时',pos:'仰卧',wake:'偶尔',soothe:'抱哄'},
+    babyMed:{name:'维生素K1',dose:'1mg',time:'出生后',route:'肌注',reaction:'无'},
+    babyException:{vomit:'无',distension:'无',gas:'无',sneeze:'无',cough:'无',fever:'无',diarrhea:'无',measure:'-',doctor:'-',note:'-'},
+    momInfo:{age:'30',delivery:'剖宫产',admitDay:'2024-01-15',height:'163cm',weight:'65kg'},
+    momVital:{temp:'37.0°C',pulse:'80次/分',resp:'18次/分',bp:'112/72mmHg',spo2:'98%'},
+    momUterus:{fundus:'脐下1横指',hardness:'硬',lochiaAmount:'中量',lochiaColor:'红色',lochiaSmell:'无味'},
+    momWound:{cesareanDressing:'干燥',cesareanRed:'无',cesareanHeal:'良好',perinealRed:'-',perinealPain:'-',perinealDisinfect:'-'},
+    momBreast:{swell:'轻度',milk:'初乳',feedFreq:'按需',block:'无',massage:'已做'},
+    momExcret:{urineSmooth:'通畅',constipation:'无',gas:'已排气'},
+    momDiet:{breakfast:'小米粥',lunch:'排骨汤+蔬菜',dinner:'面条',water:'1200ml',forbid:'辛辣',appetite:'一般',special:'术后流食'},
+    momRehab:{uterus:'已做',pelvicFloor:'1组',herbWash:'-',herbFoot:'-',moxa:'-',massage:'已做'},
+    momMed:{oral:'促进乳汁分泌药物',topical:'通乳膏'},
+    momPsych:{sleep:'5小时',mood:'略焦虑',stress:'新手妈妈'}
+  },
+  '201': {
+    name:'陈女士', babyStaff:'育婴师-李老师', momStaff:'产康师-张老师',
+    babyInfo:{sex:'女',birthWeight:'2.8kg',birthDay:'第7天',temp:'36.9°C',jaundice:'9.0'},
+    babyVital:{temp:'36.9°C',resp:'36次/分',hr:'136次/分',jaundice:'9.0',spirit:'良好',cry:'有力',fontanelle:'正常',skin:'正常'},
+    babyFeed:[
+      {time:'06:00',type:'瓶喂',side:'-',amount:'80ml',swallow:'良好',spitup:'无',vomit:'无',burp:'已拍'},
+      {time:'09:30',type:'母乳',side:'双侧各8分钟',amount:'-',swallow:'良好',spitup:'少量',vomit:'无',burp:'已拍'},
+      {time:'13:00',type:'瓶喂',side:'-',amount:'90ml',swallow:'良好',spitup:'无',vomit:'无',burp:'已拍'}
+    ],
+    babyExcret:{urine:{count:'5次',color:'清亮',amount:'多'},stool:{count:'2次',color:'黄色',type:'糊状'}},
+    babyCare:{bathe:'已洗澡',touch:'已抚触',exercise:'已做被动操',swim:'已游泳',diaper:'已换6次',nail:'已剪',butt:'已护理'},
+    babySleep:{start:'21:00',duration:'15小时',pos:'仰卧',wake:'无',soothe:'-'},
+    babyMed:{name:'维生素D3',dose:'1滴',time:'早餐后',route:'口服',reaction:'无'},
+    babyException:{vomit:'无',distension:'无',gas:'无',sneeze:'无',cough:'无',fever:'无',diarrhea:'无',measure:'-',doctor:'-',note:'-'},
+    momInfo:{age:'29',delivery:'顺产',admitDay:'2024-01-09',height:'160cm',weight:'56kg'},
+    momVital:{temp:'36.5°C',pulse:'70次/分',resp:'16次/分',bp:'106/66mmHg',spo2:'99%'},
+    momUterus:{fundus:'脐下4横指',hardness:'硬',lochiaAmount:'少量',lochiaColor:'黄色',lochiaSmell:'无味'},
+    momWound:{cesareanDressing:'-',cesareanRed:'-',cesareanHeal:'-',perinealRed:'愈合中',perinealPain:'1分',perinealDisinfect:'已消毒'},
+    momBreast:{swell:'无',milk:'充足',feedFreq:'按需',block:'无',massage:'-'},
+    momExcret:{urineSmooth:'通畅',constipation:'无',gas:'已排气'},
+    momDiet:{breakfast:'鸡蛋粥',lunch:'鸡汤+主食',dinner:'米饭+蔬菜',water:'2000ml',forbid:'-',appetite:'良好',special:'-'},
+    momRehab:{uterus:'已做',pelvicFloor:'4组',herbWash:'已做',herbFoot:'已做',moxa:'已做',massage:'已做'},
+    momMed:{oral:'-',topical:'-'},
+    momPsych:{sleep:'8小时',mood:'平稳',stress:'无'}
+  }
+};
+
+// ─── 历史记录数据（按房间×日期） ───
+const historyData = {};
+['101','102','103','201'].forEach(room => {
+  historyData[room] = {};
+  ['2024-01-16','2024-01-15','2024-01-14'].forEach(date => {
+    const isToday = date === '2024-01-16';
+    historyData[room][date] = {
+      baby: {
+        feedCount: isToday ? 3 : 2,
+        totalMilk: isToday ? '450ml' : '380ml',
+        breastCount: isToday ? 3 : 2,
+        bottleCount: isToday ? 2 : 1,
+        stoolCount: isToday ? 1 : 1,
+        stoolType: '黄色糊状',
+        urineCount: isToday ? 3 : 4,
+        sleepHours: isToday ? '14小时' : '13小时',
+        temp: isToday ? '36.8°C' : '36.7°C',
+        jaundice: isToday ? '8.2' : '7.9',
+        medName: isToday ? '维生素D3 1滴' : '-'
+      },
+      mom: {
+        temp: isToday ? '36.9°C' : '36.8°C',
+        pulse: isToday ? '78次/分' : '76次/分',
+        bp: isToday ? '110/70mmHg' : '108/68mmHg',
+        lochiaAmount: isToday ? '中量' : '少量',
+        lochiaColor: isToday ? '淡红色' : '红色',
+        wound: isToday ? '愈合良好' : '良好',
+        rehabItems: isToday ? '子宫复旧✓ 盆底肌3组 中药洗头✓ 艾灸✓' : '子宫复旧✓ 盆底肌3组',
+        mood: isToday ? '平稳' : '平稳',
+        sleep: isToday ? '6小时' : '7小时',
+        medName: isToday ? '头孢克肟 0.1g 每日2次' : '-'
+      },
+      status: isToday ? 'pending' : 'approved',
+      staff: room === '101' ? '育婴师-李老师 / 产康师-李老师' :
+             room === '102' ? '育婴师-王老师 / 产康师-李老师' :
+             room === '103' ? '育婴师-王老师 / 产康师-张老师' :
+                             '育婴师-李老师 / 产康师-张老师'
+    };
+  });
+});
+
+// ─── pageTemplates ───
+const pageTemplates = {
+
+  home: function() {
+    const rooms = [
+      {room:'101',name:'李女士',babyId:1,momId:1,babyStatus:'pending',momStatus:'pending',babyStaff:'育婴师-李老师',momStaff:'产康师-李老师',hasException:true},
+      {room:'102',name:'王女士',babyId:null,momId:2,babyStatus:'approved',momStatus:'pending',babyStaff:'育婴师-王老师',momStaff:'产康师-李老师',hasException:false},
+      {room:'103',name:'张女士',babyId:3,momId:null,babyStatus:'pending',momStatus:'approved',babyStaff:'育婴师-王老师',momStaff:'产康师-张老师',hasException:true},
+      {room:'201',name:'陈女士',babyId:null,momId:4,babyStatus:'approved',momStatus:'pending',babyStaff:'育婴师-李老师',momStaff:'产康师-张老师',hasException:false}
+    ];
+    const pendingFeedback = feedbackList.filter(f=>f.status==='pending');
+    const pendingException = exceptionList.filter(e=>e.status==='pending');
+    const pR = rooms.filter(r=>r.babyStatus==='pending'||r.momStatus==='pending').length;
+    const pF = feedbackList.filter(f=>f.status==='pending').length;
+    const pE = exceptionList.filter(e=>e.status==='pending').length;
+    return `<div class="stat-grid">
+      <div class="stat-card" onclick="showPage('review')" style="cursor:pointer"><div class="num">${pR}</div><div class="label">待审核房间</div></div>
+      <div class="stat-card" onclick="showPage('feedback')" style="cursor:pointer"><div class="num">${pF}</div><div class="label">待处理建议</div></div>
+      <div class="stat-card" onclick="showPage('exception')" style="cursor:pointer"><div class="num">${pE}</div><div class="label">待处理异常</div></div>
+      <div class="stat-card"><div class="num">4</div><div class="label">在住宝妈</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>🏠 今日房间服务概览</span><button class="btn btn-secondary btn-sm" onclick="showPage('review')">全部审核</button></div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        ${rooms.map(r=>{
+          const allOk=r.babyStatus==='approved'&&r.momStatus==='approved';
+          const sc=allOk?'#4caf50':'#ff9800';
+          const st=allOk?'已完成':'待处理';
+          return `<div style="background:#f8f9fa;border-radius:10px;padding:14px;border-left:3px solid ${sc};cursor:pointer;" onclick="openRoomReview('${r.room}')">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font-size:15px;font-weight:600;">${r.room}房 · ${r.name}</span>
+              <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:${sc}22;color:${sc};font-weight:600;">${st}</span>
+            </div>
+            <div style="font-size:12px;color:#666;line-height:1.8;">
+              <div>👶 宝宝：${r.babyStaff} · <span style="color:${r.babyStatus==='pending'?'#ff9800':'#4caf50'};">${r.babyStatus==='pending'?'待提交':'已审核'}</span></div>
+              <div>🤱 宝妈：${r.momStaff} · <span style="color:${r.momStatus==='pending'?'#ff9800':'#4caf50'};">${r.momStatus==='pending'?'待提交':'已审核'}</span></div>
+              ${r.hasException?'<div style="color:#f44336;">⚠️ 有异常待处理</div>':''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <div class="card-title"><span>💬 今日待处理建议</span><button class="btn btn-secondary btn-sm" onclick="showPage('feedback')">全部</button></div>
+        <div class="record-list">
+          ${pendingFeedback.slice(0,2).map(f=>`<div class="record-item pending">
+            <div class="record-header"><div><span class="tag tag-mama">${f.typeLabel}</span><span class="title">${f.customer}</span></div><div class="meta">${f.createTime.split(' ')[1]}</div></div>
+            <div class="record-body">${f.content.substring(0,40)}...</div>
+            <div class="record-footer"><button class="btn btn-primary btn-sm" onclick="openFeedbackDetail(${f.id})">处理</button></div>
+          </div>`).join('')}
+          ${pendingFeedback.length===0?'<div class="empty-tip">暂无待处理建议</div>':''}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>⚠️ 今日待处理异常</span><button class="btn btn-secondary btn-sm" onclick="showPage('exception')">全部</button></div>
+        <div class="record-list">
+          ${pendingException.slice(0,2).map(e=>`<div class="record-item pending">
+            <div class="record-header"><div><span class="tag tag-service">${e.typeLabel}</span><span class="title">${e.customer}</span></div><div class="meta">${e.createTime.split(' ')[1]}</div></div>
+            <div class="record-body">${e.content.substring(0,40)}...</div>
+            <div class="record-footer"><button class="btn btn-warning btn-sm" onclick="openExceptionDetail(${e.id})">处理</button></div>
+          </div>`).join('')}
+          ${pendingException.length===0?'<div class="empty-tip">暂无待处理异常</div>':''}
+        </div>
+      </div>
+    </div>`;
+  },
+
+  review: function() {
+    const rooms = [
+      {room:'101',name:'李女士',babyId:1,momId:1,babyStatus:'pending',momStatus:'pending',babyStaff:'育婴师-李老师',momStaff:'产康师-李老师',hasException:true},
+      {room:'102',name:'王女士',babyId:null,momId:2,babyStatus:'approved',momStatus:'pending',babyStaff:'育婴师-王老师',momStaff:'产康师-李老师',hasException:false},
+      {room:'103',name:'张女士',babyId:3,momId:null,babyStatus:'pending',momStatus:'approved',babyStaff:'育婴师-王老师',momStaff:'产康师-张老师',hasException:true},
+      {room:'201',name:'陈女士',babyId:null,momId:4,babyStatus:'approved',momStatus:'pending',babyStaff:'育婴师-李老师',momStaff:'产康师-张老师',hasException:false}
+    ];
+    const allReview = [...reviewList,...reviewedList];
+    const pF2 = feedbackList.filter(f=>f.status==='pending').length;
+    const pE2 = exceptionList.filter(e=>e.status==='pending').length;
+    return `<div class="stat-grid">
+      <div class="stat-card"><div class="num">${reviewList.filter(r=>r.status==='pending').length}</div><div class="label">待审核</div></div>
+      <div class="stat-card"><div class="num">${reviewedList.length}</div><div class="label">今日已审核</div></div>
+      <div class="stat-card" onclick="showPage('exception')" style="cursor:pointer"><div class="num">${pE2}</div><div class="label">待处理异常</div></div>
+      <div class="stat-card" onclick="showPage('feedback')" style="cursor:pointer"><div class="num">${pF2}</div><div class="label">待处理建议</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>✅ 按房间审核</span>
+        <div class="filter-bar">
+          <button class="filter-btn active" onclick="setReviewFilter('all',this)">全部</button>
+          <button class="filter-btn" onclick="setReviewFilter('pending',this)">待审核</button>
+          <button class="filter-btn" onclick="setReviewFilter('approved',this)">已通过</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        ${rooms.map(r=>{
+          const allApproved=r.babyStatus==='approved'&&r.momStatus==='approved';
+          const sc=allApproved?'#4caf50':'#ff9800';
+          const st=allApproved?'已审核':'待审核';
+          const babyRec=r.babyId?allReview.find(x=>x.id===r.babyId):null;
+          const momRec=r.momId?allReview.find(x=>x.id===r.momId):null;
+          return `<div style="background:#f8f9fa;border-radius:12px;padding:16px;border-left:3px solid ${sc};cursor:pointer;" onclick="openRoomReview('${r.room}')">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <span style="font-size:15px;font-weight:600;">${r.room}房 · ${r.name}</span>
+              <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:${sc}22;color:${sc};font-weight:600;">${st}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+              <div style="background:#fff;border-radius:8px;padding:8px;border:1px solid #e0e0e0;">
+                <div style="font-weight:600;margin-bottom:4px;">👶 宝宝记录</div>
+                ${babyRec?'<div style="color:#555;">'+babyRec.content.substring(0,50)+'...</div><div style="color:#999;margin-top:4px;">'+babyRec.staff+' · '+babyRec.createTime.split(' ')[1]+'</div>':'<div style="color:#4caf50;font-weight:500;">✓ 已审核</div>'}
+              </div>
+              <div style="background:#fff;border-radius:8px;padding:8px;border:1px solid #e0e0e0;">
+                <div style="font-weight:600;margin-bottom:4px;">🤱 宝妈记录</div>
+                ${momRec?'<div style="color:#555;">'+momRec.content.substring(0,50)+'...</div><div style="color:#999;margin-top:4px;">'+momRec.staff+' · '+momRec.createTime.split(' ')[1]+'</div>':'<div style="color:#4caf50;font-weight:500;">✓ 已审核</div>'}
+              </div>
+            </div>
+            ${r.hasException?'<div style="margin-top:8px;font-size:12px;color:#f44336;">⚠️ 有异常上报</div>':''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>💬 审核待办中的宝妈建议</span></div>
+      <div class="record-list">
+        ${feedbackList.filter(f=>f.status==='pending').length>0?feedbackList.filter(f=>f.status==='pending').map(f=>renderFeedbackItem(f)).join(''):'<div class="empty-tip">暂无待处理建议</div>'}
+      </div>
+    </div>`;
+  },
+
+  exception: function() {
+    const list = exceptionList.filter(e=>{
+      if(currentFilter.exception==='all') return true;
+      if(currentFilter.exception==='pending') return e.status==='pending';
+      if(currentFilter.exception==='resolved') return e.status==='resolved';
+      return true;
+    });
+    return `<div class="card">
+      <div class="card-title"><span>⚠️ 异常处理</span>
+        <div class="filter-bar">
+          <button class="filter-btn ${currentFilter.exception==='all'?'active':''}" onclick="setExceptionFilter('all',this)">全部</button>
+          <button class="filter-btn ${currentFilter.exception==='pending'?'active':''}" onclick="setExceptionFilter('pending',this)">待处理</button>
+          <button class="filter-btn ${currentFilter.exception==='resolved'?'active':''}" onclick="setExceptionFilter('resolved',this)">已解决</button>
+        </div>
+      </div>
+      <div class="record-list">
+        ${list.map(e=>`<div class="record-item ${e.status==='pending'?'pending':'reviewed'}">
+          <div class="record-header">
+            <div><span class="tag tag-service">${e.typeLabel}</span><span class="title">${e.customer}</span></div>
+            <div class="meta">${e.createTime}${e.handler?' · '+e.handler:''}</div>
+          </div>
+          <div class="record-body">${e.content}</div>
+          <div class="record-footer">
+            ${e.status==='pending'?'<button class="btn btn-warning btn-sm" onclick="openExceptionDetail('+e.id+')">处理</button>':'<span style="font-size:12px;color:#4caf50;">✓ 已解决 · '+e.handler+'</span>'}
+          </div>
+        </div>`).join('')}
+        ${list.length===0?'<div class="empty-tip">暂无异常记录</div>':''}
+      </div>
+    </div>`;
+  },
+
+  feedback: function() {
+    const list = feedbackList.filter(f=>{
+      if(currentFilter.feedback==='all') return true;
+      if(currentFilter.feedback==='pending') return f.status==='pending';
+      if(currentFilter.feedback==='done') return f.status==='done';
+      return true;
+    });
+    return `<div class="card">
+      <div class="card-title"><span>💬 意见反馈</span>
+        <div class="filter-bar">
+          <button class="filter-btn ${currentFilter.feedback==='all'?'active':''}" onclick="setFeedbackFilter('all',this)">全部</button>
+          <button class="filter-btn ${currentFilter.feedback==='pending'?'active':''}" onclick="setFeedbackFilter('pending',this)">待处理</button>
+          <button class="filter-btn ${currentFilter.feedback==='done'?'active':''}" onclick="setFeedbackFilter('done',this)">已处理</button>
+        </div>
+      </div>
+      <div class="record-list">
+        ${list.map(f=>renderFeedbackItem(f)).join('')}
+        ${list.length===0?'<div class="empty-tip">暂无反馈</div>':''}
+      </div>
+    </div>`;
+  },
+
+  stats: function() {
+    return `<div class="stat-grid">
+      <div class="stat-card"><div class="num">4</div><div class="label">在住宝妈</div></div>
+      <div class="stat-card"><div class="num">4</div><div class="label">今日审核通过</div></div>
+      <div class="stat-card"><div class="num">2</div><div class="label">待处理异常</div></div>
+      <div class="stat-card"><div class="num">3</div><div class="label">待处理建议</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <div class="card-title"><span>📊 今日审核进度</span></div>
+        <div style="font-size:13px;line-height:2.2;">
+          <div>101房 <span style="float:right;color:#ff9800;">待审核</span></div>
+          <div style="background:#e0e0e0;border-radius:4px;height:8px;margin-top:2px;"><div style="background:#ff9800;width:0%;height:8px;border-radius:4px;"></div></div>
+          <div>102房 <span style="float:right;color:#4caf50;">已审核</span></div>
+          <div style="background:#e0e0e0;border-radius:4px;height:8px;margin-top:2px;"><div style="background:#4caf50;width:100%;height:8px;border-radius:4px;"></div></div>
+          <div>103房 <span style="float:right;color:#ff9800;">待审核</span></div>
+          <div style="background:#e0e0e0;border-radius:4px;height:8px;margin-top:2px;"><div style="background:#ff9800;width:0%;height:8px;border-radius:4px;"></div></div>
+          <div>201房 <span style="float:right;color:#ff9800;">待审核</span></div>
+          <div style="background:#e0e0e0;border-radius:4px;height:8px;margin-top:2px;"><div style="background:#ff9800;width:0%;height:8px;border-radius:4px;"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>📈 本周汇总</span></div>
+        <div style="font-size:13px;line-height:2.2;">
+          <div>累计审核 <span style="float:right;font-weight:600;">28</span> 条</div>
+          <div>异常处理 <span style="float:right;font-weight:600;">5</span> 条</div>
+          <div>建议处理 <span style="float:right;font-weight:600;">12</span> 条</div>
+          <div>满意度 <span style="float:right;font-weight:600;color:#4caf50;">98%</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>📋 服务覆盖</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;font-size:13px;line-height:2;">
+        <div><h4 style="margin-bottom:8px;">审核统计</h4>
+          <div>今日待审：<span style="color:#ff9800;font-weight:600;">3</span> 间</div>
+          <div>今日已审：<span style="color:#4caf50;font-weight:600;">1</span> 间</div>
+          <div>本周通过率：<span style="font-weight:600;">100%</span></div>
+        </div>
+        <div><h4 style="margin-bottom:8px;">意见反馈</h4>
+          <div>待处理：<span style="color:#ff9800;font-weight:600;">3</span> 条</div>
+          <div>已处理：<span style="color:#4caf50;font-weight:600;">8</span> 条</div>
+        </div>
+        <div><h4 style="margin-bottom:8px;">服务覆盖</h4>
+          <div>在住宝妈：<span style="font-weight:600;">4</span> 位</div>
+          <div>已服务：<span style="font-weight:600;">4</span> 位</div>
+          <div>服务率：<span style="color:#4caf50;font-weight:600;">100%</span></div>
+        </div>
+      </div>
+    </div>`;
+  },
+
+  history: function() {
+    const rooms=['101','102','103','201'];
+    const roomNames={'101':'李女士','102':'王女士','103':'张女士','201':'陈女士'};
+    const dates=['2024-01-16','2024-01-15','2024-01-14'];
+    return `<div class="card">
+        <div class="card-title"><span>📅 历史记录</span></div>
+        <div style="margin-bottom:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <div>
+            <label style="font-size:13px;color:#666;margin-right:8px;">选择房间:</label>
+            <select id="history-room-select" onchange="onHistoryRoomChange(this.value)" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+              ${rooms.map(r=>'<option value="'+r+'"'+(r===currentHistoryRoom?' selected':'')+'>'+r+'房 · '+roomNames[r]+'</option>').join('')}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:13px;color:#666;margin-right:8px;">选择日期:</label>
+            <select id="history-date-select" onchange="onHistoryDateChange(this.value)" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+              ${dates.map((d,i)=>'<option value="'+d+'"'+(d===currentHistoryDate?' selected':'')+'>'+d+(i===0?' (今日)':'')+'</option>').join('')}
+            </select>
+          </div>
+        </div>
+        <div id="history-content">${renderHistoryContent()}</div>
+      </div>`;
+  }
+};
+
+function renderHistoryContent() {
+  const room=currentHistoryRoom;
+  const date=currentHistoryDate;
+  const data=historyData[room]&&historyData[room][date];
+  if(!data) return '<div class="empty-tip">暂无历史记录</div>';
+  const roomNames={'101':'李女士','102':'王女士','103':'张女士','201':'陈女士'};
+  const sc=data.status==='pending'?'#ff9800':'#4caf50';
+  const st=data.status==='pending'?'待审核':'已审核';
+  return `<div style="margin-bottom:12px;padding:10px 14px;background:#e8eaf6;border-radius:8px;font-size:15px;font-weight:600;">
+    ${room}房 · ${roomNames[room]} · ${date} <span style="font-size:12px;font-weight:400;color:#666;margin-left:8px;">${st}</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div style="background:#f8f9fa;border-radius:10px;padding:14px;border-left:3px solid #1565c0;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:#1565c0;">👶 宝宝记录汇总</div>
+      <div style="font-size:12px;color:#555;line-height:2;">
+        <div>喂养：<span style="font-weight:600;color:#333;">${data.baby.feedCount}次</span>（母乳${data.baby.breastCount}次 / 瓶喂${data.baby.bottleCount}次），总奶量约${data.baby.totalMilk}</div>
+        <div>排泄：小便${data.baby.urineCount}次 / 大便${data.baby.stoolCount}次（${data.baby.stoolType}）</div>
+        <div>睡眠：约${data.baby.sleepHours}</div>
+        <div>体温：${data.baby.temp} | 黄疸值：${data.baby.jaundice}</div>
+        ${data.baby.medName!=='-'?'<div>用药：'+data.baby.medName+'</div>':''}
+      </div>
+    </div>
+    <div style="background:#f8f9fa;border-radius:10px;padding:14px;border-left:3px solid #c62828;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:#c62828;">🤱 宝妈记录汇总</div>
+      <div style="font-size:12px;color:#555;line-height:2;">
+        <div>体温：${data.mom.temp} | 脉搏：${data.mom.pulse} | 血压：${data.mom.bp}</div>
+        <div>恶露：量${data.mom.lochiaAmount}，颜色${data.mom.lochiaColor}</div>
+        <div>伤口：${data.mom.wound}</div>
+        <div>康复：${data.mom.rehabItems}</div>
+        <div>情绪：${data.mom.mood} | 睡眠：${data.mom.sleep}</div>
+        ${data.mom.medName!=='-'?'<div>用药：'+data.mom.medName+'</div>':''}
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:12px;font-size:12px;color:#999;">护理人员：${data.staff}</div>`;
+}
+
+function onHistoryRoomChange(room) {
+  currentHistoryRoom=room;
+  document.getElementById('history-date-select').innerHTML=
+    ['2024-01-16','2024-01-15','2024-01-14'].map((d,i)=>
+      '<option value="'+d+'"'+(d===currentHistoryDate?' selected':'')+'>'+d+(i===0?' (今日)':'')+'</option>'
+    ).join('');
+  document.getElementById('history-content').innerHTML=renderHistoryContent();
+}
+
+function onHistoryDateChange(date) {
+  currentHistoryDate=date;
+  document.getElementById('history-content').innerHTML=renderHistoryContent();
+}
+
+function renderFeedbackItem(f) {
+  const pt=f.priority==='high'?'<span class="tag" style="background:#ffcdd2;color:#c62828;">紧急</span>':'';
+  const st=f.status==='pending'?'<span style="font-size:12px;color:#ff9800;">待处理</span>':'<span style="font-size:12px;color:#4caf50;">✓ 已处理</span>';
+  return `<div class="record-item ${f.status==='pending'?'pending':'reviewed'}">
+    <div class="record-header">
+      <div><span class="tag tag-mama">${f.typeLabel}</span><span class="title">${f.customer}</span>${pt}</div>
+      <div class="meta">${f.createTime} ${st}</div>
+    </div>
+    <div class="record-body">${f.content}</div>
+    <div class="record-footer">
+      ${f.status==='pending'?
+        '<button class="btn btn-primary btn-sm" onclick="openFeedbackDetail('+f.id+')">处理</button>'
+        :(f.assignee?'<span style="font-size:12px;color:#4caf50;">已分配：'+f.assignee+'</span>':'')}
+    </div>
+  </div>`;
+}
+
+function openRoomReview(room) {
+  const rd=roomDetailData[room];
+  if(!rd) { showToast('暂无该房间数据'); return; }
+
+  // ── 宝宝记录 HTML ──
+  let babyHTML='';
+  if(rd.babyInfo){
+    babyHTML+=`<div style="background:#e3f2fd;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#1565c0;">📋 基础信息（入住时填写）</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">性别：${rd.babyInfo.sex} | 出生体重：${rd.babyInfo.birthWeight} | 出生天数：${rd.babyInfo.birthDay}<br>入院体温：${rd.babyInfo.temp} | 黄疸值：${rd.babyInfo.jaundice}</div>
+    </div>`;
+  }
+  if(rd.babyVital){
+    babyHTML+=`<div style="background:#e3f2fd;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#1565c0;">🌡️ 生命体征</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">体温：${rd.babyVital.temp} | 呼吸：${rd.babyVital.resp} | 心率：${rd.babyVital.hr}<br>黄疸值：${rd.babyVital.jaundice} | 精神状态：${rd.babyVital.spirit} | 哭声：${rd.babyVital.cry}<br>前囟：${rd.babyVital.fontanelle} | 肤色：${rd.babyVital.skin}</div>
+    </div>`;
+  }
+  if(rd.babyFeed&&rd.babyFeed.length>0){
+    babyHTML+=`<div style="background:#e3f2fd;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#1565c0;">🍼 喂养记录</div>
+      <div style="font-size:12px;color:#555;line-height:1.8;">
+        ${rd.babyFeed.map(f=>`<div>⏰ ${f.time} · ${f.type} · ${f.side} · 奶量${f.amount} · 吞咽${f.swallow} · 溢奶${f.spitup} · 拍嗝${f.burp}</div>`).join('')}
+      </div>
+    </div>`;
+  }
+  if(rd.babyExcret){
+    babyHTML+=`<div style="background:#e3f2fd;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#1565c0;">💩 排泄记录</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">
+        小便：${rd.babyExcret.urine.count}次，${rd.babyExcret.urine.color}，量${rd.babyExcret.urine.amount}<br>
+        大便：${rd.babyExcret.stool.count}次，${rd.babyExcret.stool.color}，${rd.babyExcret.stool.type}
+      </div>
+    </div>`;
+  }
+  if(rd.babyCare){
+    babyHTML+=`<div style="background:#e3f2fd;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#1565c0;">🛁 日常护理</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">
+        洗澡${rd.babyCare.bathe==='已洗澡'?'✓':'✗'} · 抚触${rd.babyCare.touch==='已抚触'?'✓':'✗'} · 被动操${rd.babyCare.exercise==='已做被动操'?'✓':'✗'} · 游泳${rd.babyCare.swim==='已游泳'?'✓':'✗'}<br>
+        换尿布${rd.babyCare.diaper}次 · 剪指甲${rd.babyCare.nail==='已剪'?'✓':'✗'} · 臀部护理${rd.babyCare.butt==='已护理'?'✓':'✗'}
+      </div>
+    </div>`;
+  }
+  if(rd.babySleep){
+    babyHTML+=`<div style="background:#e3f2fd;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#1565c0;">😴 睡眠记录</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">入睡：${rd.babySleep.start} | 时长：${rd.babySleep.duration} | 姿势：${rd.babySleep.pos}<br>易醒：${rd.babySleep.wake} | 安抚方式：${rd.babySleep.soothe}</div>
+    </div>`;
+  }
+  if(rd.babyMed&&rd.babyMed.name!=='-'){
+    babyHTML+=`<div style="background:#e3f2fd;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#1565c0;">💊 用药记录</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">
+        药物：${rd.babyMed.name} | 剂量：${rd.babyMed.dose}<br>
+        时间：${rd.babyMed.time} | 途径：${rd.babyMed.route} | 反应：${rd.babyMed.reaction}
+      </div>
+    </div>`;
+  }
+  if(rd.babyException){
+    const hasException=Object.values(rd.babyException).some(v=>v!=='无'&&v!=='-');
+    if(hasException){
+      babyHTML+=`<div style="background:#fff3e0;border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid #ffcc80;">
+        <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#e65100;">⚠️ 异常情况</div>
+        <div style="font-size:12px;color:#555;line-height:1.6;">
+          ${rd.babyException.vomit!=='无'?'呕吐：'+rd.babyException.vomit+'<br>':''}
+          ${rd.babyException.distension!=='无'?'腹胀：'+rd.babyException.distension+'<br>':''}
+          ${rd.babyException.fever!=='无'?'发热：'+rd.babyException.fever+'<br>':''}
+          处理：${rd.babyException.measure} | 医生意见：${rd.babyException.doctor}
+        </div>
+      </div>`;
+    }
+  }
+  babyHTML+=`<div style="background:#e3f2fd;border-radius:10px;padding:14px;margin-bottom:12px;">
+    <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#1565c0;">📝 交班签名</div>
+    <div style="font-size:12px;color:#555;line-height:1.6;">记录人：${rd.babyStaff} | 时间：2024-01-16 16:00<br>家长知情：□已告知 □未告知</div>
+  </div>`;
+
+  // ── 宝妈记录 HTML ──
+  let momHTML='';
+  const isCSection=rd.momInfo&&rd.momInfo.delivery==='剖宫产';
+  if(rd.momInfo){
+    momHTML+=`<div style="background:#fce4ec;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#c62828;">📋 基础信息（入住时填写）</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">年龄：${rd.momInfo.age} | 分娩方式：${rd.momInfo.delivery} | 入院日期：${rd.momInfo.admitDay}</div>
+    </div>`;
+  }
+  if(rd.momVital){
+    momHTML+=`<div style="background:#fce4ec;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#c62828;">🌡️ 生命体征</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">体温：${rd.momVital.temp} | 脉搏：${rd.momVital.pulse} | 呼吸：${rd.momVital.resp}<br>血压：${rd.momVital.bp} | 血氧：${rd.momVital.spo2}%</div>
+    </div>`;
+  }
+  if(rd.momUterus){
+    momHTML+=`<div style="background:#fce4ec;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#c62828;">🤰 子宫与恶露</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">宫底：${rd.momUterus.fundus} | 硬度：${rd.momUterus.hardness}<br>恶露量：${rd.momUterus.lochiaAmount} | 颜色：${rd.momUterus.lochiaColor} | 气味：${rd.momUterus.lochiaSmell}</div>
+    </div>`;
+  }
+  if(isCSection&&rd.momWound){
+    momHTML+=`<div style="background:#fce4ec;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#c62828;">🩹 剖宫产伤口护理</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">敷料：${rd.momWound.cesareanDressing} | 红肿：${rd.momWound.cesareanRed} | 愈合：${rd.momWound.cesareanHeal}</div>
+    </div>`;
+  } else if(!isCSection&&rd.momWound){
+    momHTML+=`<div style="background:#fce4ec;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#c62828;">🩹 会阴切口护理</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">红肿：${rd.momWound.perinealRed} | 疼痛：${rd.momWound.perinealPain}分 | 消毒：${rd.momWound.perinealDisinfect}</div>
+    </div>`;
+  }
+  if(rd.momBreast){
+    momHTML+=`<div style="background:#fce4ec;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#c62828;">乳房管理</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">胀痛：${rd.momBreast.swell} | 泌乳量：${rd.momBreast.milk} | 喂奶频次：${rd.momBreast.feedFreq}<br>堵奶：${rd.momBreast.block} | 通乳：${rd.momBreast.massage}</div>
+    </div>`;
+  }
+  if(rd.momExcret){
+    momHTML+=`<div style="background:#fce4ec;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#c62828;">💧 排泄情况</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">小便：${rd.momExcret.urineSmooth?'通畅':'异常'} | 大便：${rd.momExcret.constipation?'便秘':'正常'} | 排气：${rd.momExcret.gas}</div>
+    </div>`;
+  }
+  if(rd.momDiet){
+    momHTML+=`<div style="background:#fce4ec;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#c62828;">🍽️ 饮食饮水</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">早${rd.momDiet.breakfast} 午${rd.momDiet.lunch} 晚${rd.momDiet.dinner} | 饮水：${rd.momDiet.water}<br>忌口：${rd.momDiet.forbid} | 胃口：${rd.momDiet.appetite} | 特殊：${rd.momDiet.special}</div>
+    </div>`;
+  }
+  if(rd.momRehab){
+    momHTML+=`<div style="background:#fce4ec;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#c62828;">💪 产后康复</div>
+      <div style="font-size:11px;color:#555;line-height:1.8;">
+        子宫复旧${rd.momRehab.uterus==='已做'?'✓':'✗'} | 盆底肌${rd.momRehab.pelvicFloor} | 中药洗头${rd.momRehab.herbWash==='已做'?'✓':'✗'}<br>
+        中药泡脚${rd.momRehab.herbFoot==='已做'?'✓':'✗'} | 艾灸${rd.momRehab.moxa==='已做'?'✓':'✗'} | 肩颈按摩${rd.momRehab.massage==='已做'?'✓':'✗'}
+      </div>
+    </div>`;
+  }
+  if(rd.momMed&&rd.momMed.oral!=='-'){
+    momHTML+=`<div style="background:#fce4ec;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#c62828;">💊 用药记录</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">${rd.momMed.oral}</div>
+    </div>`;
+  }
+  if(rd.momPsych){
+    momHTML+=`<div style="background:#fce4ec;border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#c62828;">😴 心理睡眠</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">睡眠：${rd.momPsych.sleep}小时 | 情绪：${rd.momPsych.mood} | 压力：${rd.momPsych.stress}</div>
+    </div>`;
+  }
+  momHTML+=`<div style="background:#fce4ec;border-radius:10px;padding:14px;margin-bottom:12px;">
+    <div style="font-weight:600;font-size:14px;margin-bottom:8px;color:#c62828;">📝 宣教交班</div>
+    <div style="font-size:12px;color:#555;line-height:1.6;">记录人：${rd.momStaff} | 时间：2024-01-16 16:00<br>健康宣教：□哺乳指导 □伤口护理 □避孕指导 □产后42天复查</div>
+  </div>`;
+
+  document.getElementById('room-review-content').innerHTML=
+    `<div style="margin-bottom:12px;padding:12px;background:#e8eaf6;border-radius:8px;">
+      <span style="font-size:16px;font-weight:600;">${room}房 · ${rd.name}</span>
+      <span style="font-size:12px;color:#666;margin-left:12px;">宝宝：${rd.babyStaff} | 宝妈：${rd.momStaff}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-height:70vh;overflow-y:auto;">
+      ${babyHTML}
+      ${momHTML}
+    </div>`;
+  document.getElementById('modal-room-review').classList.remove('hidden');
+}
+
+function approveRoom() {
+  showToast('房间审核已通过');
+  closeModal('modal-room-review');
+  refreshCurrentPage();
+  updateBadges();
+}
+function rejectRoom() {
+  showToast('房间审核已驳回');
+  closeModal('modal-room-review');
+  refreshCurrentPage();
+}
+
+function showPage(page) {
+  currentPage=page;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const navEl=document.getElementById('nav-'+page);
+  if(navEl) navEl.classList.add('active');
+  document.getElementById('page-title').textContent=pageTitles[page]||page;
+  const tpl=pageTemplates[page];
+  document.getElementById('content-area').innerHTML=typeof tpl==='function'?tpl():'';
+}
+
+function openReviewDetail(id) {
+  const record=[...reviewList,...reviewedList].find(r=>r.id===id);
+  if(!record) return;
+  currentReviewId=id;
+  document.getElementById('review-detail-content').innerHTML=`
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;color:#666;margin-bottom:8px;">
+        <span class="tag tag-${record.type}">${record.typeLabel}</span>
+        <strong>${record.customer}</strong>
+      </div>
+      <div style="font-size:12px;color:#999;margin-bottom:12px;">记录人：${record.staff} | 时间：${record.createTime}</div>
+      <div style="padding:12px;background:#f8f9fa;border-radius:8px;font-size:14px;line-height:1.8;">${record.content}</div>
+    </div>`;
+  document.getElementById('modal-review-detail').classList.remove('hidden');
+}
+function approveRecord() {
+  const record=reviewList.find(r=>r.id===currentReviewId);
+  if(record){record.status='approved';record.reviewTime=new Date().toLocaleString('zh-CN');record.reviewNote='审核通过';showToast('记录已通过');}
+  closeModal('modal-review-detail');refreshCurrentPage();updateBadges();
+}
+function rejectRecord() {
+  const record=reviewList.find(r=>r.id===currentReviewId);
+  if(record){record.status='rejected';showToast('记录已驳回');}
+  closeModal('modal-review-detail');showPage('review');updateBadges();
+}
+
+function openFeedbackDetail(id) {
+  const feedback=feedbackList.find(f=>f.id===id);
+  if(!feedback) return;
+  currentFeedbackId=id;
+  document.getElementById('feedback-detail-content').innerHTML=`
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;color:#666;margin-bottom:8px;">
+        <span class="tag tag-mama">${feedback.typeLabel}</span>
+        <strong>${feedback.customer}</strong>
+        ${feedback.priority==='high'?'<span class="tag" style="background:#ffcdd2;color:#c62828;margin-left:8px;">紧急</span>':''}
+      </div>
+      <div style="font-size:12px;color:#999;margin-bottom:12px;">提交时间：${feedback.createTime}</div>
+      <div style="padding:12px;background:#fff8e1;border-radius:8px;font-size:14px;line-height:1.8;border:1px solid #ffe082;">${feedback.content}</div>
+    </div>`;
+  document.getElementById('modal-feedback-detail').classList.remove('hidden');
+}
+function openAssignModal() {
+  closeModal('modal-feedback-detail');
+  document.getElementById('modal-assign').classList.remove('hidden');
+}
+function toggleAssignee(el) { el.classList.toggle('selected'); }
+function submitAssign() {
+  const selected=document.querySelectorAll('.assignee-item.selected');
+  if(selected.length===0){showToast('请选择处理人');return;}
+  const feedback=feedbackList.find(f=>f.id===currentFeedbackId);
+  if(feedback){feedback.status='done';feedback.assignee=Array.from(selected).map(s=>s.textContent).join('、');}
+  closeModal('modal-assign');showToast('任务已分配');refreshCurrentPage();updateBadges();
+}
+
+function openExceptionDetail(id) {
+  const exception=exceptionList.find(e=>e.id===id);
+  if(!exception) return;
+  currentExceptionId=id;
+  document.getElementById('exception-detail-content').innerHTML=`
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;color:#666;margin-bottom:8px;">
+        <span class="tag tag-${exception.type}">${exception.typeLabel}</span>
+        <strong>${exception.customer}</strong>
+      </div>
+      <div style="font-size:12px;color:#999;margin-bottom:12px;">
+        上报时间：${exception.createTime}${exception.handler?' · 处理人：'+exception.handler:''}
+      </div>
+      <div style="padding:12px;background:#ffebee;border-radius:8px;font-size:14px;line-height:1.8;border:1px solid #ffcdd2;">${exception.content}</div>
+    </div>
+    ${exception.status==='pending'?'<div class="form-group"><label>处理备注</label><textarea placeholder="请填写处理意见..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;min-height:80px;resize:vertical;"></textarea></div>':''}`;
+  document.getElementById('modal-exception-detail').classList.remove('hidden');
+}
+function handleException(status) {
+  const exception=exceptionList.find(e=>e.id===currentExceptionId);
+  if(exception){exception.status=status;if(status==='resolved')exception.handler='刘主管';}
+  closeModal('modal-exception-detail');
+  showToast(status==='resolved'?'异常已标记为已解决':'异常已标记为处理中');
+  refreshCurrentPage();updateBadges();
+}
+
+function setReviewFilter(type,btn) {
+  currentFilter.review=type;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('content-area').innerHTML=pageTemplates.review();
+}
+function setExceptionFilter(type,btn) {
+  currentFilter.exception=type;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('content-area').innerHTML=pageTemplates.exception();
+}
+function setFeedbackFilter(type,btn) {
+  currentFilter.feedback=type;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('content-area').innerHTML=pageTemplates.feedback();
+}
+
+function closeModal(modalId) { document.getElementById(modalId).classList.add('hidden'); }
+
+function updateBadges() {
+  const pr=reviewList.filter(r=>r.status==='pending').length;
+  const pf=feedbackList.filter(f=>f.status==='pending').length;
+  const rb=document.getElementById('review-badge');
+  const fb=document.getElementById('feedback-badge');
+  if(rb) rb.textContent=pr;
+  if(fb) fb.textContent=pf;
+}
+
+function showToast(msg) {
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),3000);
+}
+
+showPage('home');
+
+
+</script>
+</body>
+</html>

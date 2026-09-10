@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>月子中心综合管理系统 - 原型演示</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.container{background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.3);padding:40px;max-width:900px;width:90%}
+h1{text-align:center;color:#333;margin-bottom:8px;font-size:28px}
+.subtitle{text-align:center;color:#666;margin-bottom:30px;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.card{background:#fff;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all 0.3s;border:2px solid transparent;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,0.15)}
+.card.love{border-color:#ff6b9d}
+.card.love:hover{background:#fff0f5}
+.card.love .icon{background:linear-gradient(135deg,#ff6b9d,#c44569);color:#fff}
+.card.pink{border-color:#e91e8c}
+.card.pink:hover{background:#fce4f1}
+.card.pink .icon{background:linear-gradient(135deg,#e91e8c,#c2185b);color:#fff}
+.card.blue{border-color:#2196f3}
+.card.blue:hover{background:#e3f2fd}
+.card.blue .icon{background:linear-gradient(135deg,#2196f3,#1565c0);color:#fff}
+.card.orange{border-color:#ff9800}
+.card.orange:hover{background:#fff3e0}
+.card.orange .icon{background:linear-gradient(135deg,#ff9800,#e65100);color:#fff}
+.card.green{border-color:#4caf50}
+.card.green:hover{background:#e8f5e9}
+.card.green .icon{background:linear-gradient(135deg,#4caf50,#2e7d32);color:#fff}
+.card.purple{border-color:#9c27b0}
+.card.purple:hover{background:#f3e5f5}
+.card.purple .icon{background:linear-gradient(135deg,#9c27b0,#6a1b9a);color:#fff}
+.card.teal{border-color:#009688}
+.card.teal:hover{background:#e0f2f1}
+.card.teal .icon{background:linear-gradient(135deg,#009688,#00695c);color:#fff}
+.icon{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 12px}
+.card h3{font-size:16px;color:#333;margin-bottom:6px}
+.card p{font-size:12px;color:#888}
+.footer{text-align:center;margin-top:30px;font-size:12px;color:#999}
+.status{display:inline-block;padding:4px 12px;border-radius:12px;font-size:11px;margin-top:8px}
+.status.done{background:#e8f5e9;color:#2e7d32}
+.status.pending{background:#fff3e0;color:#e65100}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🏥 月子中心综合管理系统</h1>
+  <p class="subtitle">业务流程原型演示 | 各角色端入口</p>
+  <div class="grid">
+    <a href="business-flow.html" class="card blue" style="text-decoration:none">
+      <div class="icon">📊</div>
+      <h3>业务流程总览</h3>
+      <p>全流程可视化</p>
+      <span class="status done">✅ 已完成</span>
+    </a>
+    <a href="02-sales.html" class="card blue" style="text-decoration:none">
+      <div class="icon">💼</div>
+      <h3>销售端</h3>
+      <p>客户跟进、签约管理</p>
+      <span class="status done">✅ 已完成</span>
+    </a>
+    <a href="03-yuying.html" class="card blue" style="text-decoration:none">
+      <div class="icon">👶</div>
+      <h3>育婴师端</h3>
+      <p>宝宝护理记录</p>
+      <span class="status done">✅ 已完成</span>
+    </a>
+    <a href="04-chankang.html" class="card pink" style="text-decoration:none">
+      <div class="icon">💆</div>
+      <h3>产康师端</h3>
+      <p>宝妈康复服务</p>
+      <span class="status done">✅ 已完成</span>
+    </a>
+    <a href="05-kitchen.html" class="card orange" style="text-decoration:none">
+      <div class="icon">🍳</div>
+      <h3>厨房端</h3>
+      <p>菜单管理、拍照上传</p>
+      <span class="status done">✅ 已完成</span>
+    </a>
+    <a href="06-supervisor.html" class="card green" style="text-decoration:none">
+      <div class="icon">👔</div>
+      <h3>主管端</h3>
+      <p>审核、异常处理</p>
+      <span class="status done">✅ 已完成</span>
+    </a>
+    <a href="07-mom.html" class="card love" style="text-decoration:none">
+      <div class="icon">🌸</div>
+      <h3>宝妈端</h3>
+      <p>查看记录、预约、分享</p>
+      <span class="status done">✅ 已完成</span>
+    </a>
+    <a href="08-boss.html" class="card purple" style="text-decoration:none">
+      <div class="icon">🏢</div>
+      <h3>店长端</h3>
+      <p>全局管理、财务、人员</p>
+      <span class="status done">✅ 已完成</span>
+    </a>
+  </div>
+  <div class="footer">
+    <p>月子中心综合管理系统 v1.0 | 数据采集日期: 2024-01-20</p>
+    <p style="margin-top:8px">提示：各端数据独立，演示时请注意观察不同角色的视角差异</p>
+  </div>
+</div>
+</body>
+</html>

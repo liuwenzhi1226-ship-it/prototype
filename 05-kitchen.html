@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>厨房端</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f7fa;display:flex;height:100vh}
+.sidebar{width:160px;background:linear-gradient(180deg,#ff9800,#f57c00);color:#fff;display:flex;flex-direction:column}
+.sidebar-header{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,0.2)}
+.sidebar-header h2{font-size:16px}
+.sidebar-header p{font-size:11px;opacity:0.8;margin-top:4px}
+.nav-menu{flex:1;padding:12px 0}
+.nav-item{padding:14px 20px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px}
+.nav-item:hover{background:rgba(255,255,255,0.1)}
+.nav-item.active{background:rgba(255,255,255,0.2)}
+.nav-icon{font-size:16px}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.header{background:#fff;padding:16px 24px;border-bottom:1px solid #e8e8e8}
+.content{flex:1;overflow-y:auto;padding:20px}
+.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.card-title{font-size:14px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat-card{background:#fff;border-radius:12px;padding:16px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.stat-card .num{font-size:24px;font-weight:600;color:#ff9800}
+.stat-card .label{font-size:12px;color:#666;margin-top:4px}
+.btn{padding:8px 16px;border:none;border-radius:20px;font-size:13px;cursor:pointer;transition:all 0.2s}
+.btn-primary{background:linear-gradient(135deg,#ff9800,#f57c00);color:#fff}
+.btn-primary:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-secondary{background:#f5f5f5;color:#666}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-block{width:100%;margin-top:12px}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:4px}
+.tag-orange{background:#fff3e0;color:#e65100}
+.tag-green{background:#e8f5e9;color:#2e7d32}
+.tag-blue{background:#e3f2fd;color:#1565c0}
+.menu-item{padding:10px;border-bottom:1px solid #f0f0f0;font-size:13px}
+.menu-item:last-child{border-bottom:none}
+.menu-label{font-weight:600;color:#f57c00;margin-bottom:4px;font-size:12px}
+.menu-items{font-size:12px;color:#666}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.photo-item{aspect-ratio:1;border-radius:8px;overflow:hidden;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:32px;cursor:pointer;position:relative}
+.photo-item .photo-label{position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.5);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal{background:#fff;border-radius:16px;width:92%;max-width:700px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column}
+.modal-header{padding:16px 20px;border-bottom:1px solid #e8e8e8;display:flex;justify-content:space-between;align-items:center}
+.modal-body{padding:20px;overflow-y:auto;flex:1}
+.modal-footer{padding:16px 20px;border-top:1px solid #e8e8e8;display:flex;justify-content:flex-end;gap:8px}
+.hidden{display:none!important}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:13px;color:#666;margin-bottom:6px}
+.form-input{width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px}
+.form-input:focus{outline:none;border-color:#ff9800}
+.form-select{width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999}
+.day-selector{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.day-btn{padding:8px 16px;border:1px solid #e0e0e0;border-radius:20px;font-size:12px;cursor:pointer}
+.day-btn.active{background:#ff9800;color:#fff;border-color:#ff9800}
+.section-title{font-size:13px;font-weight:600;color:#666;margin:16px 0 8px 0}
+.meal-section{margin-bottom:16px;padding:12px;background:#fff8e1;border-radius:8px}
+.meal-name{font-weight:600;color:#f57c00;margin-bottom:8px;font-size:13px}
+.meal-items{font-size:12px;color:#666;line-height:1.8}
+.photo-upload-area{border:2px dashed #e0e0e0;border-radius:8px;padding:20px;text-align:center;cursor:pointer;margin-top:8px}
+.photo-upload-area:hover{border-color:#ff9800;background:#fff8e1}
+.history-item{padding:12px;border-bottom:1px solid #f0f0f0}
+.history-item:last-child{border-bottom:none}
+.empty-state{text-align:center;padding:40px;color:#999}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.edit-menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.edit-meal-item{padding:12px;background:#fff8e1;border-radius:8px}
+.edit-meal-name{font-weight:600;color:#f57c00;margin-bottom:8px;font-size:13px}
+.edit-meal-items{font-size:12px;color:#666}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-header"><h2>🍳 厨房管理</h2><p>厨房端</p></div>
+  <div class="nav-menu">
+    <div class="nav-item active" id="nav-home" onclick="showPage('home')"><span class="nav-icon">🏠</span>首页</div>
+    <div class="nav-item" id="nav-menu" onclick="showPage('menu')"><span class="nav-icon">📅</span>菜单管理</div>
+    <div class="nav-item" id="nav-photo" onclick="showPage('photo')"><span class="nav-icon">📸</span>拍照上传</div>
+    <div class="nav-item" id="nav-special" onclick="showPage('special')"><span class="nav-icon">🥗</span>特殊饮食</div>
+    <div class="nav-item" id="nav-history" onclick="showPage('history')"><span class="nav-icon">📋</span>历史记录</div>
+  </div>
+  <div style="padding:16px;border-top:1px solid rgba(255,255,255,0.2);font-size:11px;color:rgba(255,255,255,0.7);text-align:center">厨房主管</div>
+</div>
+<div class="main">
+  <div class="header"><h1 id="page-title">首页</h1></div>
+  <div class="content" id="content-area"></div>
+</div>
+<div id="modal-photo-upload" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3 id="photo-upload-title">拍照上传</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-photo-upload')">关闭</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">选择餐次</label>
+        <select class="form-select" id="photo-meal-select">
+          <option>早餐</option><option>早点</option><option>午餐</option><option>午点</option><option>晚餐</option><option>晚点</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">上传照片</label>
+        <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
+          <div style="font-size:48px">📷</div>
+          <div style="margin-top:12px;color:#999;font-size:13px">点击上传照片</div>
+          <input type="file" id="photo-input" multiple accept="image/*" style="display:none" onchange="handlePhotoUpload(this)">
+        </div>
+      </div>
+      <div id="uploaded-photos" style="margin-top:16px"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-photo-upload')">取消</button><button class="btn btn-primary" onclick="savePhoto()">保存</button></div>
+  </div>
+</div>
+<div id="modal-edit-menu" class="modal-overlay hidden">
+  <div class="modal" style="max-width:800px">
+    <div class="modal-header"><h3>编辑菜单</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-edit-menu')">关闭</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">选择日期</label>
+        <input type="date" class="form-input" id="edit-menu-date" value="2024-01-27">
+      </div>
+      <div id="edit-menu-content"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-edit-menu')">取消</button><button class="btn btn-primary" onclick="saveMenu()">保存菜单</button></div>
+  </div>
+</div>
+<script src="data.js"></script>
+<script>
+var currentPage='home';
+var currentMenuDay=0;
+var currentPhotoDate='2024-01-20';
+var tempUploadedPhotos=[];
+var mealNames=['早餐','早点','午餐','午点','晚餐','晚点'];
+
+function showPage(page){
+  currentPage=page;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('nav-'+page).classList.add('active');
+  var titles={home:'首页',menu:'菜单管理',photo:'拍照上传',special:'特殊饮食',history:'历史记录'};
+  document.getElementById('page-title').textContent=titles[page];
+  var contentArea=document.getElementById('content-area');
+  if(page==='home')contentArea.innerHTML=renderHome();
+  else if(page==='menu')contentArea.innerHTML=renderMenu();
+  else if(page==='photo')contentArea.innerHTML=renderPhoto();
+  else if(page==='special')contentArea.innerHTML=renderSpecial();
+  else if(page==='history')contentArea.innerHTML=renderHistory();
+}
+
+function renderHome(){
+  var html='';
+  html+='<div class="grid-4">';
+  html+='<div class="stat-card"><div class="num">3</div><div class="label">在住客户</div></div>';
+  html+='<div class="stat-card"><div class="num">6</div><div class="label">今日餐次</div></div>';
+  html+='<div class="stat-card"><div class="num">'+centerData.specialDiets.length+'</div><div class="label">特殊饮食</div></div>';
+  html+='<div class="stat-card"><div class="num">✅</div><div class="label">今日已出餐</div></div>';
+  html+='</div>';
+  html+='<div class="card"><div class="card-title">📅 今日菜单</div>';
+  var todayMenu=centerData.weeklyMenu[0];
+  mealNames.forEach(mealName=>{
+    var meal=todayMenu.meals.find(m=>m.name===mealName);
+    if(meal){
+      html+='<div class="meal-section"><div class="meal-name">'+mealName+'</div>';
+      html+='<div class="meal-items">'+meal.items.join('、')+'</div></div>';
+    }
+  });
+  html+='</div>';
+  html+='<div class="card"><div class="card-title">🥗 特殊饮食需求</div>';
+  centerData.specialDiets.forEach(d=>{
+    html+='<div class="record-item"><div class="record-item-title">'+d.name+'（'+d.room+'）</div>';
+    html+='<div class="record-item-content">'+d.diet+' - '+d.reason+'</div>';
+    html+='<div class="record-item-meta">状态：'+d.status+'</div></div>';
+  });
+  html+='</div>';
+  html+='<div class="card"><div class="card-title">📸 今日菜品照片</div>';
+  var todayMeals=centerData.mealPhotos[currentPhotoDate]||{};
+  mealNames.forEach(mealName=>{
+    if(todayMeals[mealName]){
+      html+='<div class="section-title">'+mealName+'</div>';
+      html+='<div class="photo-grid">';
+      todayMeals[mealName].forEach((item,i)=>{
+        html+='<div class="photo-item" style="background:#e8f5e9;font-size:28px">'+item+'</div>';
+      });
+      html+='</div>';
+    }
+  });
+  if(Object.keys(todayMeals).length===0){
+    html+='<div class="empty-state" style="padding:20px"><div class="icon">🍽️</div><div>暂无菜品照片</div></div>';
+  }
+  html+='</div>';
+  html+='<button class="btn btn-primary btn-block" onclick="showPage(\'photo\')">📸 拍照上传</button>';
+  return html;
+}
+
+function renderMenu(){
+  var html='';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+  html+='<div class="day-selector" style="margin-bottom:0">';
+  centerData.weeklyMenu.forEach((m,i)=>{
+    html+='<div class="day-btn'+(i===currentMenuDay?' active':'')+'" onclick="selectMenuDay('+i+')">'+m.day+'</div>';
+  });
+  html+='</div>';
+  html+='<button class="btn btn-primary btn-sm" onclick="openEditMenu()">✏️ 编辑菜单</button>';
+  html+='</div>';
+  html+='<div class="card"><div class="card-title">📅 '+centerData.weeklyMenu[currentMenuDay].day+' 菜单</div>';
+  var todayMenu=centerData.weeklyMenu[currentMenuDay];
+  mealNames.forEach(mealName=>{
+    var meal=todayMenu.meals.find(m=>m.name===mealName);
+    if(meal){
+      html+='<div class="meal-section"><div class="meal-name">'+mealName+'</div>';
+      html+='<div class="meal-items">'+meal.items.join('、')+'</div></div>';
+    }
+  });
+  html+='</div>';
+  html+='<div class="card"><div class="card-title">📋 下周菜单预览</div>';
+  var nextMenu=centerData.weeklyMenu[(currentMenuDay+1)%7];
+  mealNames.forEach(mealName=>{
+    var meal=nextMenu.meals.find(m=>m.name===mealName);
+    if(meal){
+      html+='<div class="meal-section"><div class="meal-name">'+mealName+'</div>';
+      html+='<div class="meal-items">'+meal.items.join('、')+'</div></div>';
+    }
+  });
+  html+='</div>';
+  return html;
+}
+
+function renderPhoto(){
+  var html='';
+  html+='<div class="day-selector">';
+  html+='<div class="day-btn active" onclick="selectPhotoDate(\'2024-01-20\')">今日</div>';
+  html+='<div class="day-btn" onclick="selectPhotoDate(\'2024-01-19\')">昨日</div>';
+  html+='</div>';
+  html+='<div class="card"><div class="card-title">🥬 原材料照片（每日一次）</div>';
+  html+='<div class="photo-grid">';
+  var ingredients=centerData.ingredientPhotos[currentPhotoDate]||['🥬','🐔','🐟','🥛','🍚'];
+  ingredients.forEach((emoji,i)=>{
+    html+='<div class="photo-item" style="background:#e8f5e9;font-size:36px">'+emoji+'</div>';
+  });
+  html+='</div>';
+  html+='<button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="openPhotoUpload(\'原材料\')">📷 上传原材料照片</button>';
+  html+='</div>';
+  html+='<div class="card"><div class="card-title">🍽️ 菜品照片</div>';
+  html+='<div class="grid-2">';
+  var todayMenu=centerData.weeklyMenu[0];
+  mealNames.forEach(mealName=>{
+    var meal=todayMenu.meals.find(m=>m.name===mealName);
+    var mealPhotos=centerData.mealPhotos[currentPhotoDate]&&centerData.mealPhotos[currentPhotoDate][mealName];
+    html+='<div style="padding:12px;background:#fff8e1;border-radius:8px">';
+    html+='<div style="font-weight:600;color:#f57c00;margin-bottom:8px">'+mealName+'</div>';
+    if(meal){
+      html+='<div style="font-size:12px;color:#666;margin-bottom:8px">'+meal.items.join('、')+'</div>';
+    }
+    if(mealPhotos&&mealPhotos.length>0){
+      html+='<div class="photo-grid" style="margin-bottom:8px">';
+      mealPhotos.forEach(p=>{
+        html+='<div class="photo-item" style="background:#e8f5e9;font-size:24px">'+p+'</div>';
+      });
+      html+='</div>';
+    }else{
+      html+='<div style="font-size:12px;color:#999;margin-bottom:8px">暂无照片</div>';
+    }
+    html+='<button class="btn btn-primary btn-sm" onclick="openPhotoUpload(\''+mealName+'\')">📷 上传</button>';
+    html+='</div>';
+  });
+  html+='</div></div>';
+  return html;
+}
+
+function renderSpecial(){
+  var html='';
+  html+='<div class="card"><div class="card-title">🥗 特殊饮食需求列表</div>';
+  if(centerData.specialDiets.length===0){
+    html+='<div class="empty-state" style="padding:40px"><div class="icon">🥗</div><div>暂无特殊饮食需求</div></div>';
+  }else{
+    centerData.specialDiets.forEach((d,i)=>{
+      html+='<div class="record-item" style="margin-bottom:12px">';
+      html+='<div style="display:flex;justify-content:space-between"><div class="record-item-title">'+d.name+'（'+d.room+'）</div>';
+      html+='<span class="tag '+(d.status==='已通知'?'tag-green':'tag-orange')+'">'+d.status+'</span></div>';
+      html+='<div class="record-item-content">需求：'+d.diet+'</div>';
+      html+='<div class="record-item-meta">原因：'+d.reason+'</div>';
+      if(d.status!=='已通知'){
+        html+='<button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="updateDietStatus('+i+')">标记已通知</button>';
+      }
+      html+='</div>';
+    });
+  }
+  html+='</div>';
+  return html;
+}
+
+function renderHistory(){
+  var html='';
+  html+='<div class="card"><div class="card-title">📋 历史菜单记录</div>';
+  html+='<div class="day-selector">';
+  html+='<div class="day-btn active" onclick="loadHistoryMenu(\'2024-01-20\',this)">01-20</div>';
+  html+='<div class="day-btn" onclick="loadHistoryMenu(\'2024-01-19\',this)">01-19</div>';
+  html+='<div class="day-btn" onclick="loadHistoryMenu(\'2024-01-18\',this)">01-18</div>';
+  html+='</div>';
+  html+='<div id="history-menu-content"></div>';
+  html+='</div>';
+  html+='<div class="card"><div class="card-title">📸 历史照片记录</div>';
+  html+='<div class="day-selector">';
+  html+='<div class="day-btn active" onclick="loadHistoryPhotos(\'2024-01-20\',this)">01-20</div>';
+  html+='<div class="day-btn" onclick="loadHistoryPhotos(\'2024-01-19\',this)">01-19</div>';
+  html+='</div>';
+  html+='<div id="history-photos-content"></div>';
+  html+='</div>';
+  return html;
+}
+
+function loadHistoryMenu(date,el){
+  document.querySelectorAll('#history-menu-content .day-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  var html='<div style="padding:20px;background:#f5f5f5;border-radius:8px">';
+  html+='<div style="font-weight:600;margin-bottom:12px">'+date+' 菜单</div>';
+  mealNames.forEach(mealName=>{
+    html+='<div style="padding:8px 0;border-bottom:1px solid #e0e0e0"><strong style="color:#f57c00">'+mealName+'</strong>: 示例菜品（周一菜单）</div>';
+  });
+  html+='</div>';
+  document.getElementById('history-menu-content').innerHTML=html;
+}
+
+function loadHistoryPhotos(date,el){
+  document.querySelectorAll('#history-photos-content .day-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  var html='<div style="padding:20px;background:#f5f5f5;border-radius:8px">';
+  html+='<div style="font-weight:600;margin-bottom:12px">'+date+' 照片</div>';
+  html+='<div style="font-size:13px;color:#666">该日期暂无历史照片记录</div>';
+  html+='</div>';
+  document.getElementById('history-photos-content').innerHTML=html;
+}
+
+function selectMenuDay(index){
+  currentMenuDay=index;
+  showPage('menu');
+}
+
+function selectPhotoDate(date){
+  currentPhotoDate=date;
+  showPage('photo');
+}
+
+function openEditMenu(){
+  var html='<div class="edit-menu-grid">';
+  mealNames.forEach((mealName,i)=>{
+    var items=centerData.weeklyMenu[currentMenuDay].meals[i].items.join(',');
+    html+='<div class="edit-meal-item"><div class="edit-meal-name">'+mealName+'</div>';
+    html+='<textarea class="form-input" rows="3" id="edit-meal-'+i+'">'+items+'</textarea>';
+    html+='</div>';
+  });
+  html+='</div>';
+  document.getElementById('edit-menu-content').innerHTML=html;
+  document.getElementById('modal-edit-menu').classList.remove('hidden');
+}
+
+function saveMenu(){
+  var newMenu=[];
+  mealNames.forEach((mealName,i)=>{
+    var itemsStr=document.getElementById('edit-meal-'+i).value;
+    var items=itemsStr.split(',').map(s=>s.trim());
+    newMenu.push({name:mealName,items:items});
+  });
+  centerData.weeklyMenu[currentMenuDay].meals=newMenu;
+  closeModal('modal-edit-menu');
+  showToast('菜单已保存');
+  showPage('menu');
+}
+
+function openPhotoUpload(type){
+  document.getElementById('photo-upload-title').textContent='上传'+type+'照片';
+  document.getElementById('uploaded-photos').innerHTML='';
+  tempUploadedPhotos=[];
+  document.getElementById('modal-photo-upload').classList.remove('hidden');
+}
+
+function handlePhotoUpload(input){
+  var files=input.files;
+  var container=document.getElementById('uploaded-photos');
+  for(var i=0;i<Math.min(files.length,5);i++){
+    var reader=new FileReader();
+    reader.onload=function(e){
+      tempUploadedPhotos.push(e.target.result);
+      var div=document.createElement('div');
+      div.style.cssText='display:inline-block;width:80px;height:80px;margin:4px;border-radius:8px;overflow:hidden';
+      div.innerHTML='<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover">';
+      container.appendChild(div);
+    };
+    reader.readAsDataURL(files[i]);
+  }
+}
+
+function savePhoto(){
+  if(tempUploadedPhotos.length===0){
+    showToast('请先上传照片');
+    return;
+  }
+  var mealName=document.getElementById('photo-meal-select').value;
+  if(!centerData.mealPhotos[currentPhotoDate]){
+    centerData.mealPhotos[currentPhotoDate]={};
+  }
+  if(!centerData.mealPhotos[currentPhotoDate][mealName]){
+    centerData.mealPhotos[currentPhotoDate][mealName]=[];
+  }
+  tempUploadedPhotos.forEach(p=>{
+    centerData.mealPhotos[currentPhotoDate][mealName].push('📷');
+  });
+  closeModal('modal-photo-upload');
+  showToast('照片已保存');
+  showPage('photo');
+}
+
+function updateDietStatus(index){
+  centerData.specialDiets[index].status='已通知';
+  showToast('已标记为已通知');
+  showPage('special');
+}
+
+function closeModal(modalId){
+  document.getElementById(modalId).classList.add('hidden');
+}
+
+function showToast(msg){
+  var t=document.createElement('div');
+  t.className='toast';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){t.remove();},3000);
+}
+
+showPage('home');
+</script>
+</body>
+</html>

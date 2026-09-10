@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>月子中心综合管理系统 — 业务流程总览</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #333; }
+
+  .header { background: #2c3e50; color: #fff; padding: 28px 40px; text-align: center; }
+  .header h1 { font-size: 24px; font-weight: 600; letter-spacing: 1px; }
+  .header p { font-size: 13px; color: #aebccc; margin-top: 6px; }
+
+  .role-legend { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 14px 40px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .role-legend span.label { font-size: 13px; color: #888; margin-right: 4px; }
+  .role-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 3px 10px; border-radius: 12px; font-weight: 500; }
+  .role-tag .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .tag-boss    { background: #fff3e0; color: #e65100; }
+  .tag-sales   { background: #e3f2fd; color: #1565c0; }
+  .tag-yuying  { background: #fce4ec; color: #c62828; }
+  .tag-chan    { background: #f3e5f5; color: #6a1b9a; }
+  .tag-supervisor { background: #e8f5e9; color: #2e7d32; }
+  .tag-kitchen { background: #fff8e1; color: #f57f17; }
+  .tag-mama    { background: #fce4ec; color: #ad1457; }
+
+  .flow-container { max-width: 960px; margin: 40px auto; padding: 0 20px; }
+
+  .phase { margin-bottom: 32px; }
+  .phase-title { font-size: 14px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-left: 4px; }
+
+  .flow-row { display: flex; align-items: stretch; gap: 0; }
+  .flow-step { flex: 1; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; position: relative; min-width: 0; }
+  .flow-step:not(:last-child) { margin-right: -1px; border-right: none; }
+  .flow-step:last-child { border-radius: 0 8px 8px 0; }
+  .flow-step:first-child { border-radius: 8px 0 0 8px; }
+
+  .step-num { font-size: 11px; color: #bbb; margin-bottom: 4px; }
+  .step-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .step-desc { font-size: 12px; color: #666; line-height: 1.5; }
+  .step-roles { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .step-role { font-size: 11px; padding: 2px 7px; border-radius: 10px; }
+
+  .arrow-down { text-align: center; color: #ccc; font-size: 20px; line-height: 1; margin: 4px 0; }
+  .arrow-right { color: #ccc; font-size: 22px; line-height: 1; }
+
+  /* 入住服务周期 - 特殊样式 */
+  .stay-phase { background: #fff; border: 2px solid #e0e0e0; border-radius: 12px; padding: 20px; margin-top: 8px; }
+  .stay-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
+  .stay-card { border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px; background: #fafafa; }
+  .stay-card h4 { font-size: 13px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .stay-card p { font-size: 12px; color: #666; line-height: 1.6; }
+  .stay-card .card-role { font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+
+  /* 分支样式 */
+  .branch { display: flex; gap: 16px; margin-top: 8px; }
+  .branch-item { flex: 1; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 14px; text-align: center; }
+  .branch-item.sig { border-color: #a5d6a7; background: #f1f8e9; }
+  .branch-item.no-sig { border-color: #ef9a9a; background: #fff3f0; }
+  .branch-label { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+
+  /* 底部 */
+  .footer-section { max-width: 960px; margin: 40px auto 60px; padding: 0 20px; }
+  .status-bar { background: #2c3e50; color: #fff; border-radius: 10px; padding: 20px 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .status-bar .phase-info { font-size: 15px; font-weight: 600; }
+  .status-bar .phase-hint { font-size: 12px; color: #aebccc; margin-top: 4px; }
+  .next-phase { background: #3498db; color: #fff; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 500; }
+
+  .pending-section { background: #fff; border: 1px solid #ffe082; border-radius: 10px; padding: 20px 28px; margin-top: 16px; }
+  .pending-section h3 { font-size: 14px; color: #e65100; margin-bottom: 10px; }
+  .pending-list { list-style: none; }
+  .pending-list li { font-size: 13px; color: #555; padding: 4px 0; border-bottom: 1px dashed #f0f0f0; }
+  .pending-list li:last-child { border-bottom: none; }
+  .pending-list li code { background: #fff3e0; padding: 1px 5px; border-radius: 3px; font-size: 12px; color: #e65100; }
+  .pending-list li.confirmed { border-left: 3px solid #4caf50; padding-left: 8px; }
+  .pending-list li.confirmed code { background: #e8f5e9; color: #2e7d32; }
+
+  .checklist-section { background: #fff; border: 1px solid #c8e6c9; border-radius: 10px; padding: 20px 28px; margin-top: 16px; }
+  .checklist-section h3 { font-size: 14px; color: #2e7d32; margin-bottom: 10px; }
+  .checklist-section ul { list-style: none; }
+  .checklist-section li { font-size: 13px; color: #555; padding: 4px 0; }
+  .checklist-section li::before { content: "☐ "; color: #2e7d32; }
+
+  .rule-badge { display: inline-block; background: #e8f5e9; color: #2e7d32; font-size: 10px; padding: 1px 6px; border-radius: 3px; margin-left: 6px; font-weight: 500; }
+  .rule-badge.pending { background: #fff3e0; color: #e65100; }
+  
+  .detail-note { font-size: 11px; color: #888; margin-top: 4px; font-style: italic; }
+  
+  .step-section { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .step-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .step-section .step-num-badge { background: #2c3e50; color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  .step-section ul { list-style: none; padding-left: 0; }
+  .step-section li { font-size: 12px; color: #555; padding: 3px 0; padding-left: 16px; position: relative; }
+  .step-section li::before { content: "·"; position: absolute; left: 4px; color: #999; }
+  .step-section .roles { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+  
+  .confirmed-box { background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 12px 16px; margin-top: 8px; font-size: 12px; color: #2e7d32; }
+  .confirmed-box strong { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>月子中心综合管理系统</h1>
+  <p>业务流程总览 · 可视化原型 · 第1步：业务流程确认</p>
+</div>
+
+<!-- 角色图例 -->
+<div class="role-legend">
+  <span class="label">角色：</span>
+  <span class="role-tag tag-boss"><span class="dot" style="background:#e65100"></span>店长/老板</span>
+  <span class="role-tag tag-sales"><span class="dot" style="background:#1565c0"></span>销售</span>
+  <span class="role-tag tag-yuying"><span class="dot" style="background:#c62828"></span>育婴师</span>
+  <span class="role-tag tag-chan"><span class="dot" style="background:#6a1b9a"></span>产康师</span>
+  <span class="role-tag tag-supervisor"><span class="dot" style="background:#2e7d32"></span>主管</span>
+  <span class="role-tag tag-kitchen"><span class="dot" style="background:#f57f17"></span>厨房</span>
+  <span class="role-tag tag-mama"><span class="dot" style="background:#ad1457"></span>宝妈</span>
+</div>
+
+<div class="flow-container">
+
+  <!-- ========== 阶段一：获客签约 ========== -->
+  <div class="phase">
+    <div class="phase-title">阶段一 · 获客签约</div>
+    
+    <div class="step-section">
+      <h3><span class="step-num-badge">STEP 01</span> 客户线索</h3>
+      <ul>
+        <li>记录客户来源渠道：线上投放 / 线下合作 / 转介绍</li>
+        <li>录入客户基本信息</li>
+      </ul>
+      <div class="roles">
+        <span class="step-role tag-sales">销售</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <div class="step-section">
+      <h3><span class="step-num-badge">STEP 02</span> 销售跟进</h3>
+      <ul>
+        <li>了解客户需求、推荐方案、沟通价格</li>
+        <li>更新跟进状态：刚联系 → 跟进了很久 → 意向明确</li>
+      </ul>
+      <div class="roles">
+        <span class="step-role tag-sales">销售</span>
+        <span class="step-role tag-mama">宝妈</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <div class="step-section">
+      <h3><span class="step-num-badge">STEP 03</span> 意向判断</h3>
+      <ul>
+        <li>评估客户意向程度，决定是否继续跟进</li>
+      </ul>
+      <div class="roles">
+        <span class="step-role tag-sales">销售</span>
+      </div>
+    </div>
+
+    <!-- 分支：签约 / 未签约 -->
+    <div class="branch" style="margin-top: 12px;">
+      <div class="branch-item sig">
+        <div class="branch-label" style="color:#2e7d32;">✓ 签约 → 进入入住流程</div>
+      </div>
+      <div class="branch-item no-sig">
+        <div class="branch-label" style="color:#c62828;">✗ 未签约 → 记录原因，进入客户沉淀池</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">↓</div>
+
+  <!-- ========== 阶段二：入住准备 ========== -->
+  <div class="phase">
+    <div class="phase-title">阶段二 · 入住准备</div>
+    
+    <div class="step-section">
+      <h3><span class="step-num-badge">STEP 04</span> 签约（销售自行记录）</h3>
+      <ul>
+        <li>销售直接选定房间（如201已被占用则选其他）</li>
+        <li>记录定金、尾款、押金金额及缴纳时间</li>
+        <li class="detail-note">注：财务收入不走系统，线下处理，系统只记录金额和时间</li>
+      </ul>
+      <div class="confirmed-box">
+        <strong>已确认规则：</strong>销售在签约时选定房间并锁定，客户预订即占用该房间
+      </div>
+      <div class="roles">
+        <span class="step-role tag-sales">销售</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <div class="step-section">
+      <h3><span class="step-num-badge">STEP 05</span> 入住准备</h3>
+      <ul>
+        <li>确认入住时间、套餐内容、特殊需求（饮食禁忌等）</li>
+      </ul>
+      <div class="roles">
+        <span class="step-role tag-sales">销售</span>
+        <span class="step-role tag-supervisor">主管</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <div class="step-section">
+      <h3><span class="step-num-badge">STEP 06</span> 安排房间</h3>
+      <ul>
+        <li>确认销售已选定的房间，标记为"已入住"</li>
+      </ul>
+      <div class="roles">
+        <span class="step-role tag-supervisor">主管</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <div class="step-section">
+      <h3><span class="step-num-badge">STEP 07</span> 安排育婴师</h3>
+      <ul>
+        <li>分配负责宝宝日常护理的育婴师</li>
+      </ul>
+      <div class="confirmed-box">
+        <strong>已确认规则：</strong>育婴师一对一，1个育婴师服务1个宝妈+1个宝宝
+      </div>
+      <div class="roles">
+        <span class="step-role tag-supervisor">主管</span>
+        <span class="step-role tag-yuying">育婴师</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <div class="step-section">
+      <h3><span class="step-num-badge">STEP 08</span> 安排产康师</h3>
+      <ul>
+        <li>分配负责宝妈产康服务的产康师</li>
+      </ul>
+      <div class="confirmed-box">
+        <strong>已确认规则：</strong>产康师一对多，1个产康师可服务多个宝妈
+      </div>
+      <div class="roles">
+        <span class="step-role tag-supervisor">主管</span>
+        <span class="step-role tag-chan">产康师</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">↓</div>
+
+  <!-- ========== 阶段三：入住服务周期 ========== -->
+  <div class="phase">
+    <div class="phase-title">阶段三 · 入住服务周期（每日循环）</div>
+    <div class="stay-phase">
+      <div style="font-size:13px;color:#888;margin-bottom:4px;">此阶段为持续服务周期，以下为各角色每日核心工作：</div>
+      <div class="stay-grid">
+
+        <div class="stay-card">
+          <div class="card-role" style="color:#c62828;">👶 育婴师</div>
+          <h4>宝宝日常护理</h4>
+          <p>负责当前绑定宝妈及宝宝的日常护理：<br>
+            · 喂养、洗澡、睡眠观察<br>
+            · 体温、排便等健康记录<br>
+            · 异常情况及时上报主管</p>
+        </div>
+
+        <div class="stay-card">
+          <div class="card-role" style="color:#6a1b9a;">💆 产康师</div>
+          <h4>宝妈产康服务</h4>
+          <p>负责宝妈产后康复服务：<br>
+            · 身体恢复评估与执行<br>
+            · 服务记录填写<br>
+            · 服务后预约下次时间</p>
+        </div>
+
+        <div class="stay-card" style="border-color: #ffe082; background: #fffde7;">
+          <div class="card-role" style="color:#f57f17;">🍳 厨房</div>
+          <h4>餐饮服务 <span class="rule-badge">已确认规则</span></h4>
+          <p>按<strong>周菜单</strong>执行餐饮服务：<br>
+            · 每周提前制定完整菜单<br>
+            · 同一房间所有宝妈餐食相同<br>
+            · 特殊需求通过"提建议"反馈<br>
+            · 不接收实时点餐订单</p>
+        </div>
+
+        <div class="stay-card">
+          <div class="card-role" style="color:#2e7d32;">📋 主管</div>
+          <h4>审核与管理 <span class="rule-badge">已确认规则</span></h4>
+          <p>负责团队管理与审核：<br>
+            · 审核育婴师、产康师工作记录<br>
+            · 处理宝妈建议和异常情况<br>
+            · 随时响应，无固定频率</p>
+        </div>
+
+        <div class="stay-card">
+          <div class="card-role" style="color:#ad1457;">🤱 宝妈</div>
+          <h4>查看服务信息</h4>
+          <p>可查看与自己相关的信息：<br>
+            · 宝宝护理记录（只读）<br>
+            · 产康服务记录（只读）<br>
+            · 餐饮安排（只读）<br>
+            · 提交服务建议或需求</p>
+        </div>
+
+        <div class="stay-card">
+          <div class="card-role" style="color:#e65100;">👔 店长/老板</div>
+          <h4>整体运营监控</h4>
+          <p>查看全店运营概况：<br>
+            · 当前入住情况与房间利用率<br>
+            · 人员排班与工作量<br>
+            · 待审核记录与异常事件<br>
+            · 整体经营数据</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">↓</div>
+
+  <!-- ========== 阶段四：离店 ========== -->
+  <div class="phase">
+    <div class="phase-title">阶段四 · 离店与沉淀</div>
+    
+    <div class="step-section">
+      <h3><span class="step-num-badge">STEP 09</span> 服务结束</h3>
+      <ul>
+        <li>入住周期结束，完成所有服务记录汇总</li>
+      </ul>
+      <div class="roles">
+        <span class="step-role tag-supervisor">主管</span>
+        <span class="step-role tag-yuying">育婴师</span>
+        <span class="step-role tag-chan">产康师</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <div class="step-section">
+      <h3><span class="step-num-badge">STEP 10</span> 离店</h3>
+      <ul>
+        <li>完成离店手续</li>
+        <li>退还押金（线下处理，系统记录退还时间）</li>
+      </ul>
+      <div class="confirmed-box">
+        <strong>已确认规则：</strong>入住前已付清定金+尾款+押金，离店时退还押金，系统只记录金额和时间
+      </div>
+      <div class="roles">
+        <span class="step-role tag-boss">店长</span>
+        <span class="step-role tag-mama">宝妈</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <div class="step-section">
+      <h3><span class="step-num-badge">STEP 11</span> 满意度 / 评价</h3>
+      <ul>
+        <li>收集客户反馈，记录满意度</li>
+      </ul>
+      <div class="roles">
+        <span class="step-role tag-mama">宝妈</span>
+        <span class="step-role tag-boss">店长</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <div class="step-section">
+      <h3><span class="step-num-badge">STEP 12</span> 客户沉淀</h3>
+      <ul>
+        <li>客户信息归档，用于后续复购或转介绍</li>
+      </ul>
+      <div class="roles">
+        <span class="step-role tag-sales">销售</span>
+        <span class="step-role tag-boss">店长</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 底部信息 -->
+<div class="footer-section">
+
+  <div class="status-bar">
+    <div>
+      <div class="phase-info">📌 当前阶段：业务流程确认</div>
+      <div class="phase-hint">已确认7项业务规则，仅剩D-08待后续阶段确定</div>
+    </div>
+    <div class="next-phase">下一阶段 → 核心数据模型设计</div>
+  </div>
+
+  <div class="pending-section">
+    <h3>⚠ 待确认事项（已更新）</h3>
+    <ul class="pending-list">
+      <li class="confirmed"><code>D-01</code> 客户获客渠道 → <strong>已确认：线上、线下、转介绍三种并存</strong></li>
+      <li class="confirmed"><code>D-02</code> 签约审批 → <strong>已确认：销售自行记录，无需审批，财务不走系统</strong></li>
+      <li class="confirmed"><code>D-03</code> 房间分配 → <strong>已确认：销售签约时直接选定并锁定</strong></li>
+      <li class="confirmed"><code>D-04</code> 服务配比 → <strong>已确认：育婴师一对一，产康师一对多</strong></li>
+      <li class="confirmed"><code>D-05</code> 餐饮服务 → <strong>已确认：每周套餐制，房间统一，非点餐制</strong></li>
+      <li class="confirmed"><code>D-06</code> 离店结算 → <strong>已确认：入住前付费，系统只记录金额和时间</strong></li>
+      <li class="confirmed"><code>D-07</code> 主管审核 → <strong>已确认：审核宝妈建议、孩子异常，随时处理</strong></li>
+      <li><code>D-08</code> 客户服务范围 → <strong>待后续阶段再定</strong></li>
+    </ul>
+  </div>
+
+  <div class="checklist-section">
+    <h3>✅ 请人工检查</h3>
+    <ul>
+      <li>客户从咨询到离店的整体流程是否合理</li>
+      <li>7类角色在流程中的位置是否正确</li>
+      <li>厨房餐饮服务描述是否正确（周菜单、房间统一、非点餐制）</li>
+      <li>主管审核内容是否正确（宝妈建议、孩子异常，随时处理）</li>
+      <li>签约流程描述是否正确（销售自行记录、无需审批、财务不走系统）</li>
+      <li>付费流程描述是否正确（入住前付费、系统只记录金额和时间）</li>
+      <li>是否有遗漏的角色或业务流程环节</li>
+    </ul>
+  </div>
+
+</div>
+
+</body>
+</html>

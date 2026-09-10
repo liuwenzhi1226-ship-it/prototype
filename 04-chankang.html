@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>月子中心管理系统 — 产康师端原型</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f7fa; display: flex; height: 100vh; overflow: hidden; }
+.sidebar { width: 180px; background: #6a1b9a; color: #fff; display: flex; flex-direction: column; }
+.sidebar-header { padding: 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar-header h2 { font-size: 15px; }
+.sidebar-header p { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+.nav-menu { flex: 1; padding: 12px 0; }
+.nav-item { padding: 14px 20px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: background 0.2s; }
+.nav-item:hover { background: rgba(255,255,255,0.1); }
+.nav-item.active { background: rgba(255,255,255,0.2); }
+.nav-footer { padding: 16px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: rgba(255,255,255,0.6); text-align: center; }
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.header { background: #fff; padding: 16px 24px; border-bottom: 1px solid #e8e8e8; display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 18px; }
+.header-current { font-size: 13px; color: #6a1b9a; background: #f3e5f5; padding: 4px 12px; border-radius: 12px; }
+.content { flex: 1; overflow-y: auto; padding: 20px; }
+.card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.card-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+.mama-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.mama-card { background: #f8f9fa; border-radius: 10px; padding: 16px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
+.mama-card:hover { border-color: #6a1b9a; background: #fff; }
+.mama-card.active { border-color: #6a1b9a; background: #f3e5f5; }
+.mama-card .name { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 4px; }
+.mama-card .room { font-size: 13px; color: #666; }
+.mama-card .status { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-top: 8px; }
+.status-pending { background: #fff3e0; color: #e65100; }
+.status-done { background: #e8f5e9; color: #2e7d32; }
+.quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.quick-btn { padding: 16px 12px; border-radius: 12px; cursor: pointer; text-align: center; border: 2px solid transparent; transition: all 0.2s; }
+.quick-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.quick-btn .icon { font-size: 24px; margin-bottom: 6px; }
+.quick-btn .label { font-size: 13px; font-weight: 500; }
+.btn-mama { background: #fce4ec; color: #c62828; }
+.summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.summary-box { background: #f8f9fa; border-radius: 8px; padding: 16px; text-align: center; }
+.summary-box .num { font-size: 24px; font-weight: 600; color: #6a1b9a; }
+.summary-box .label { font-size: 12px; color: #666; margin-top: 4px; }
+.pending-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.pending-item { padding: 10px 16px; background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.pending-item:hover { background: #fff3e0; }
+.pending-item.done { background: #e8f5e9; border-color: #a5d6a7; color: #2e7d32; text-decoration: line-through; }
+.pending-item .checkbox { width: 16px; height: 16px; border: 2px solid #ccc; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+.pending-item.done .checkbox { background: #4caf50; border-color: #4caf50; color: #fff; }
+.record-card { background: #f8f9fa; border-radius: 8px; padding: 12px; margin-bottom: 8px; border-left: 3px solid #6a1b9a; }
+.record-card .time { font-size: 12px; color: #666; margin-bottom: 4px; }
+.record-card .type { font-size: 13px; font-weight: 500; }
+.record-card .detail { font-size: 12px; color: #888; margin-top: 4px; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: #fff; border-radius: 16px; width: 92%; max-width: 520px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+.modal-header { padding: 20px; border-bottom: 1px solid #e8e8e8; display: flex; justify-content: space-between; align-items: center; }
+.modal-header h3 { font-size: 16px; }
+.modal-close { width: 32px; height: 32px; border: none; background: #f5f5f5; border-radius: 50%; cursor: pointer; font-size: 18px; }
+.modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+.modal-footer { padding: 16px 20px; border-top: 1px solid #e8e8e8; display: flex; justify-content: space-between; align-items: center; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; color: #333; margin-bottom: 6px; font-weight: 500; }
+.form-group input, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+.form-group textarea { min-height: 80px; resize: vertical; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.option-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.option-btn { padding: 8px 16px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+.option-btn:hover { background: #e8e8e8; }
+.option-btn.selected { background: #6a1b9a; color: #fff; border-color: #6a1b9a; }
+.btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+.btn-secondary { background: #f5f5f5; color: #333; }
+.btn-primary { background: #6a1b9a; color: #fff; }
+.btn:hover { opacity: 0.9; }
+.history-day { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.history-day-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; cursor: pointer; padding: 8px; border-radius: 8px; }
+.history-day-header:hover { background: #f8f9fa; }
+.history-day .date { font-size: 15px; font-weight: 600; }
+.history-day .weekday { font-size: 12px; color: #666; margin-top: 2px; }
+.history-day-details { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e0e0e0; }
+.history-day.expanded .history-day-details { display: block; }
+.history-day-toggle { font-size: 13px; color: #6a1b9a; cursor: pointer; text-align: center; margin-top: 8px; padding: 8px; }
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 9999; animation: fadeIn 0.3s; }
+@keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.hidden { display: none !important; }
+.back-btn { font-size: 13px; color: #6a1b9a; cursor: pointer; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 4px; }
+.btn-add { background: #6a1b9a; color: #fff; padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.btn-add:hover { opacity: 0.9; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h2>🏥 月子中心</h2>
+    <p>产康师端原型</p>
+  </div>
+  <div class="nav-menu">
+    <div class="nav-item active" id="nav-home" onclick="showPage('home')"><span>🏠</span> 首页</div>
+    <div class="nav-item" id="nav-schedule" onclick="showPage('schedule')"><span>📅</span> 预约管理</div>
+    <div class="nav-item" id="nav-history" onclick="showPage('history')"><span>📋</span> 历史记录</div>
+  </div>
+  <div class="nav-footer">产康师：李老师</div>
+</div>
+
+<div class="main">
+  <div class="header">
+    <h1 id="page-title">首页</h1>
+    <div id="current-mama-display" class="header-current" style="display: none;"></div>
+  </div>
+  <div class="content" id="content-area"></div>
+</div>
+
+<!-- 新建预约 -->
+<div id="modal-new-schedule" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>➕ 新建预约</h3><button class="modal-close" onclick="closeModal('modal-new-schedule')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>选择宝妈</label>
+        <select id="new-schedule-mama" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+          <option value="">请选择</option>
+          <option value="1">101房 李女士</option>
+          <option value="2">102房 王女士</option>
+          <option value="3">103房 张女士</option>
+          <option value="4">201房 陈女士</option>
+        </select>
+      </div>
+      <div class="form-group"><label>预约日期</label><input type="date" id="new-schedule-date"></div>
+      <div class="form-row"><div class="form-group"><label>开始时间</label><input type="time" id="new-schedule-start" value="09:00"></div><div class="form-group"><label>结束时间</label><input type="time" id="new-schedule-end" value="09:30"></div></div>
+      <div class="form-group"><label>预约项目</label>
+        <select id="new-schedule-project" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+          <option value="">请选择</option>
+          <option value="盆底肌康复">盆底肌康复</option>
+          <option value="腹直肌修复">腹直肌修复</option>
+          <option value="骨盆调理">骨盆调理</option>
+          <option value="中药洗头">中药洗头</option>
+          <option value="中药泡脚">中药泡脚</option>
+          <option value="艾灸">艾灸</option>
+          <option value="肩颈按摩">肩颈按摩</option>
+          <option value="熏蒸">熏蒸</option>
+          <option value="乳腺疏通">乳腺疏通</option>
+          <option value="生命体征测量">生命体征测量</option>
+          <option value="伤口护理">伤口护理</option>
+          <option value="健康宣教">健康宣教</option>
+        </select>
+      </div>
+      <div class="form-group"><label>备注</label><textarea id="new-schedule-note" placeholder="可选填写备注..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-new-schedule')">取消</button>
+      <button class="btn btn-primary" onclick="saveSchedule()">保存预约</button>
+    </div>
+  </div>
+</div>
+
+<!-- 生命体征 -->
+<div id="modal-vitals" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>🌡️ 生命体征测量</h3><button class="modal-close" onclick="closeModal()">×;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>服务对象</label><input type="text" id="vitals-mama" readonly style="background: #f5f5f5;"></div>
+      <div class="form-row"><div class="form-group"><label>体温 (°C)</label><input type="number" step="0.1" placeholder="如：36.8"></div><div class="form-group"><label>脉搏 (次/分)</label><input type="number" placeholder="如：75"></div></div>
+      <div class="form-row"><div class="form-group"><label>血压 (mmHg)</label><input type="text" placeholder="如：120/80"></div><div class="form-group"><label>呼吸 (次/分)</label><input type="number" placeholder="如：18"></div></div>
+      <div class="form-group"><label>血氧 (%)</label><input type="number" placeholder="如：98"></div>
+      <div class="form-group"><label>精神状态</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this)">良好</div><div class="option-btn" onclick="toggleOpt(this)">一般</div><div class="option-btn" onclick="toggleOpt(this)">疲倦</div></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveRecord('vitals')">保存记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- 恶露观察 -->
+<div id="modal-lochia" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>🩸 恶露观察</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>服务对象</label><input type="text" id="lochia-mama" readonly style="background: #f5f5f5;"></div>
+      <div class="form-group"><label>观察时间</label><input type="time" value="10:00"></div>
+      <div class="form-group"><label>恶露量</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this)">量少</div><div class="option-btn" onclick="toggleOpt(this)">中量</div><div class="option-btn" onclick="toggleOpt(this)">量多</div></div></div>
+      <div class="form-group"><label>颜色</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this)">红色</div><div class="option-btn" onclick="toggleOpt(this)">淡红</div><div class="option-btn" onclick="toggleOpt(this)">黄色</div><div class="option-btn" onclick="toggleOpt(this)">白色</div></div></div>
+      <div class="form-group"><label>气味</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this)">无异味</div><div class="option-btn" onclick="toggleOpt(this)">有异味</div></div></div>
+      <div class="form-group"><label>有无血块</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this, 'clot-note')">无</div><div class="option-btn" onclick="toggleOpt(this, 'clot-note')">有</div></div></div>
+      <div class="form-group hidden" id="clot-note"><label>血块情况</label><textarea placeholder="请描述..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveRecord('lochia')">保存记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- 伤口护理 -->
+<div id="modal-wound" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>🩹 伤口护理</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>服务对象</label><input type="text" id="wound-mama" readonly style="background: #f5f5f5;"></div>
+      <div class="form-group"><label>伤口类型</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this)">会阴切口</div><div class="option-btn" onclick="toggleOpt(this)">剖腹产切口</div></div></div>
+      <div class="form-group"><label>观察时间</label><input type="time" value="10:30"></div>
+      <div class="form-group"><label>伤口情况</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this)">愈合良好</div><div class="option-btn" onclick="toggleOpt(this)">轻微红肿</div><div class="option-btn" onclick="toggleOpt(this)">渗液</div></div></div>
+      <div class="form-group"><label>疼痛等级</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this)">无疼痛</div><div class="option-btn" onclick="toggleOpt(this)">轻度</div><div class="option-btn" onclick="toggleOpt(this)">中度</div><div class="option-btn" onclick="toggleOpt(this)">重度</div></div></div>
+      <div class="form-group"><label>处理措施</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this)">消毒</div><div class="option-btn" onclick="toggleOpt(this)">冰敷</div><div class="option-btn" onclick="toggleOpt(this)">坐浴</div><div class="option-btn" onclick="toggleOpt(this)">无需处理</div></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveRecord('wound')">保存记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- 乳房管理 -->
+<div id="modal-breast" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>🍼 乳房管理</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>服务对象</label><input type="text" id="breast-mama" readonly style="background: #f5f5f5;"></div>
+      <div class="form-group"><label>观察时间</label><input type="time" value="11:00"></div>
+      <div class="form-group"><label>乳房情况</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this)">无胀痛</div><div class="option-btn" onclick="toggleOpt(this)">轻度胀痛</div><div class="option-btn" onclick="toggleOpt(this)">重度胀痛</div><div class="option-btn" onclick="toggleOpt(this)">有硬块</div></div></div>
+      <div class="form-group"><label>乳头情况</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this)">正常</div><div class="option-btn" onclick="toggleOpt(this)">皲裂</div><div class="option-btn" onclick="toggleOpt(this)">内陷</div></div></div>
+      <div class="form-group"><label>泌乳量</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this)">充足</div><div class="option-btn" onclick="toggleOpt(this)">一般</div><div class="option-btn" onclick="toggleOpt(this)">不足</div></div></div>
+      <div class="form-group"><label>是否需要通乳</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this, 'massage-note')">否</div><div class="option-btn" onclick="toggleOpt(this, 'massage-note')">是</div></div></div>
+      <div class="form-group hidden" id="massage-note"><label>通乳操作记录</label><textarea placeholder="请描述通乳操作..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveRecord('breast')">保存记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- 康复项目 -->
+<div id="modal-rehab" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>🧘 康复项目</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>服务对象</label><input type="text" id="rehab-mama" readonly style="background: #f5f5f5;"></div>
+      <div class="form-group"><label>项目时间</label><input type="time" value="14:00"></div>
+      <div class="form-group"><label>选择项目</label>
+        <div class="option-group">
+          <div class="option-btn" onclick="toggleOpt(this)">子宫复旧</div>
+          <div class="option-btn" onclick="toggleOpt(this)">盆底肌康复</div>
+          <div class="option-btn" onclick="toggleOpt(this)">腹直肌修复</div>
+          <div class="option-btn" onclick="toggleOpt(this)">骨盆调理</div>
+          <div class="option-btn" onclick="toggleOpt(this)">中药洗头</div>
+          <div class="option-btn" onclick="toggleOpt(this)">中药泡脚</div>
+          <div class="option-btn" onclick="toggleOpt(this)">艾灸</div>
+          <div class="option-btn" onclick="toggleOpt(this)">熏蒸</div>
+          <div class="option-btn" onclick="toggleOpt(this)">肩颈按摩</div>
+          <div class="option-btn" onclick="toggleOpt(this)">乳腺疏通</div>
+          <div class="option-btn" onclick="toggleOpt(this)">产后运动</div>
+          <div class="option-btn" onclick="toggleOpt(this)">瑜伽</div>
+        </div>
+      </div>
+      <div class="form-group"><label>完成情况</label><div class="option-group"><div class="option-btn selected" onclick="toggleOpt(this)">已完成</div><div class="option-btn" onclick="toggleOpt(this)">部分完成</div><div class="option-btn" onclick="toggleOpt(this)">未完成</div></div></div>
+      <div class="form-group"><label>效果评估</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this)">良好</div><div class="option-btn" onclick="toggleOpt(this)">一般</div><div class="option-btn" onclick="toggleOpt(this)">需调整</div></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveRecord('rehab')">保存记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- 心理睡眠 -->
+<div id="modal-psych" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>😴 心理与睡眠记录</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>服务对象</label><input type="text" id="psych-mama" readonly style="background: #f5f5f5;"></div>
+      <div class="form-group"><label>记录时间</label><input type="time" value="21:00"></div>
+      <div class="form-group"><label>睡眠时长</label><input type="text" placeholder="如：6小时"></div>
+      <div class="form-group"><label>情绪状态</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this)">平稳</div><div class="option-btn" onclick="toggleOpt(this)">焦虑</div><div class="option-btn" onclick="toggleOpt(this)">低落</div><div class="option-btn" onclick="toggleOpt(this)">愉快</div></div></div>
+      <div class="form-group"><label>有无压力</label><div class="option-group"><div class="option-btn" onclick="toggleOpt(this, 'stress-note')">无</div><div class="option-btn" onclick="toggleOpt(this, 'stress-note')">有</div></div></div>
+      <div class="form-group hidden" id="stress-note"><label>压力来源</label><textarea placeholder="请描述..."></textarea></div>
+      <div class="form-group"><label>疏导记录</label><textarea placeholder="请记录沟通疏导内容..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveRecord('psych')">保存记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- 用药记录 -->
+<div id="modal-medication" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>💊 用药记录</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>服务对象</label><input type="text" id="medication-mama" readonly style="background: #f5f5f5;"></div>
+      <div class="form-group"><label>药物名称</label><input type="text" placeholder="请输入药物名称"></div>
+      <div class="form-row"><div class="form-group"><label>剂量</label><input type="text" placeholder="如：1粒 / 5ml"></div><div class="form-group"><label>给药时间</label><input type="time" value="08:00"></div></div>
+      <div class="form-group"><label>给药方式</label><div class="option-group"><div class="option-btn selected" onclick="toggleOpt(this)">口服</div><div class="option-btn" onclick="toggleOpt(this)">外用</div><div class="option-btn" onclick="toggleOpt(this)">其他</div></div></div>
+      <div class="form-group"><label>有无药物反应</label><div class="option-group"><div class="option-btn selected" onclick="toggleOpt(this, 'med-react-note')">无</div><div class="option-btn" onclick="toggleOpt(this, 'med-react-note')">有</div></div></div>
+      <div class="form-group hidden" id="med-react-note"><label>反应描述</label><textarea placeholder="如有药物反应，请描述..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveRecord('medication')">保存记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- 护理小结 -->
+<div id="modal-summary" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3>📝 护理小结</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>服务对象</label><input type="text" id="summary-mama" readonly style="background: #f5f5f5;"></div>
+      <div class="form-group"><label>今日护理小结</label><textarea placeholder="请总结今日护理情况..."></textarea></div>
+      <div class="form-group"><label>医生巡诊意见</label><textarea placeholder="如有医生巡诊，请记录意见..."></textarea></div>
+      <div class="form-group"><label>护理人员签名</label><input type="text" value="李老师" readonly style="background: #f5f5f5;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveRecord('summary')">保存记录</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPage = 'home';
+let savedCount = 12;
+let currentMama = null;
+
+const mamaList = [
+  { id: 1, name: '李女士', room: '101', status: '待记录', days: 7, delivery: '顺产' },
+  { id: 2, name: '王女士', room: '102', status: '待记录', days: 5, delivery: '剖宫产' },
+  { id: 3, name: '张女士', room: '103', status: '待记录', days: 3, delivery: '顺产' },
+  { id: 4, name: '陈女士', room: '201', status: '待记录', days: 10, delivery: '剖宫产' }
+];
+
+// 预约数据
+let schedules = [
+  { id: 1, mamaId: 1, date: '2024-01-16', start: '09:00', end: '09:30', project: '盆底肌康复训练', note: '' },
+  { id: 2, mamaId: 2, date: '2024-01-16', start: '09:30', end: '10:00', project: '生命体征测量', note: '' },
+  { id: 3, mamaId: 1, date: '2024-01-16', start: '10:00', end: '10:30', project: '肩颈按摩', note: '' },
+  { id: 4, mamaId: 3, date: '2024-01-16', start: '10:30', end: '11:00', project: '伤口护理', note: '' },
+  { id: 5, mamaId: 1, date: '2024-01-16', start: '14:00', end: '14:30', project: '腹直肌修复', note: '' },
+  { id: 6, mamaId: 4, date: '2024-01-16', start: '15:00', end: '15:30', project: '艾灸', note: '' },
+  { id: 7, mamaId: 2, date: '2024-01-16', start: '16:00', end: '16:30', project: '健康宣教 - 哺乳指导', note: '' }
+];
+
+const pageTemplates = {
+  home: function() {
+    if (!currentMama) {
+      return `
+        <div class="card">
+          <div class="card-title">👥 我的服务对象（共${mamaList.length}位宝妈）</div>
+          <div class="mama-list">
+            ${mamaList.map(m => `
+              <div class="mama-card" onclick="selectMama(${m.id})">
+                <div class="name">${m.name}</div>
+                <div class="room">房号：${m.room} | ${m.days}天</div>
+                <span class="status status-pending">${m.status}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 今日汇总（全部${mamaList.length}位宝妈）</div>
+          <div class="summary-grid">
+            <div class="summary-box"><div class="num">${mamaList.length}</div><div class="label">服务对象</div></div>
+            <div class="summary-box"><div class="num">${savedCount}</div><div class="label">已完成记录</div></div>
+            <div class="summary-box"><div class="num">6</div><div class="label">康复项目</div></div>
+            <div class="summary-box"><div class="num">4</div><div class="label">生命体征</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📋 今日待完成（全部）</div>
+          <div class="pending-list">
+            <div class="pending-item" onclick="togglePending(this)"><div class="checkbox"></div><span>🧴 中药洗头</span></div>
+            <div class="pending-item" onclick="togglePending(this)"><div class="checkbox"></div><span>🦶 中药泡脚</span></div>
+            <div class="pending-item" onclick="togglePending(this)"><div class="checkbox"></div><span>🔥 艾灸</span></div>
+            <div class="pending-item" onclick="togglePending(this)"><div class="checkbox"></div><span>💆 肩颈按摩</span></div>
+            <div class="pending-item" onclick="togglePending(this)"><div class="checkbox"></div><span>📚 健康宣教</span></div>
+          </div>
+        </div>
+      `;
+    } else {
+      const mama = currentMama;
+      return `
+        <div class="back-btn" onclick="showAllMamas()">← 返回全部</div>
+        <div class="card">
+          <div class="card-title">👤 当前服务：${mama.name}（${mama.room}房）</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; line-height: 2.2;">
+            <div><strong>房号：</strong>${mama.room}</div>
+            <div><strong>姓名：</strong>${mama.name}</div>
+            <div><strong>年龄：</strong>28岁</div>
+            <div><strong>分娩方式：</strong>${mama.delivery}</div>
+            <div><strong>入所日期：</strong>2024-01-10</div>
+            <div><strong>入住天数：</strong>${mama.days}天</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">⚡ 今日快速记录</div>
+          <div class="quick-grid">
+            <div class="quick-btn btn-mama" onclick="openRecord('vitals')"><div class="icon">🌡️</div><div class="label">生命体征</div></div>
+            <div class="quick-btn btn-mama" onclick="openRecord('lochia')"><div class="icon">🩸</div><div class="label">恶露观察</div></div>
+            <div class="quick-btn btn-mama" onclick="openRecord('wound')"><div class="icon">🩹</div><div class="label">伤口护理</div></div>
+            <div class="quick-btn btn-mama" onclick="openRecord('breast')"><div class="icon">🍼</div><div class="label">乳房管理</div></div>
+            <div class="quick-btn btn-mama" onclick="openRecord('rehab')"><div class="icon">🧘</div><div class="label">康复项目</div></div>
+            <div class="quick-btn btn-mama" onclick="openRecord('psych')"><div class="icon">😴</div><div class="label">心理睡眠</div></div>
+            <div class="quick-btn btn-mama" onclick="openRecord('medication')"><div class="icon">💊</div><div class="label">用药记录</div></div>
+            <div class="quick-btn btn-mama" onclick="openRecord('summary')"><div class="icon">📝</div><div class="label">护理小结</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 今日汇总（${mama.name}）</div>
+          <div class="summary-grid">
+            <div class="summary-box"><div class="num">3</div><div class="label">康复项目</div></div>
+            <div class="summary-box"><div class="num">2</div><div class="label">生命体征</div></div>
+            <div class="summary-box"><div class="num">1</div><div class="label">伤口护理</div></div>
+            <div class="summary-box"><div class="num">1</div><div class="label">乳房管理</div></div>
+            <div class="summary-box"><div class="num">1</div><div class="label">恶露观察</div></div>
+            <div class="summary-box"><div class="num">1</div><div class="label">心理睡眠</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📋 今日待完成（${mama.name}）</div>
+          <div class="pending-list">
+            <div class="pending-item" onclick="togglePending(this)"><div class="checkbox"></div><span>🧴 中药洗头</span></div>
+            <div class="pending-item" onclick="togglePending(this)"><div class="checkbox"></div><span>🦶 中药泡脚</span></div>
+            <div class="pending-item" onclick="togglePending(this)"><div class="checkbox"></div><span>📚 健康宣教</span></div>
+          </div>
+        </div>
+      `;
+    }
+  },
+  schedule: function() {
+    const today = '2024-01-16';
+    const todaySchedules = schedules.filter(s => s.date === today).sort((a, b) => a.start.localeCompare(b.start));
+    const futureSchedules = schedules.filter(s => s.date > today).sort((a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
+    
+    return `
+      <div class="card">
+        <div class="card-title">
+          <span>📅 今日预约安排（${todaySchedules.length}个）</span>
+          <button class="btn-add" onclick="openNewSchedule()">➕ 新建预约</button>
+        </div>
+        ${todaySchedules.length > 0 ? todaySchedules.map(s => {
+          const mama = mamaList.find(m => m.id === s.mamaId);
+          return `<div class="record-card"><div class="time">${s.start} - ${s.end}</div><div class="type">📋 ${s.project}</div><div class="detail">${mama.room}房 ${mama.name}${s.note ? ' | ' + s.note : ''}</div></div>`;
+        }).join('') : '<div style="text-align:center;color:#999;padding:20px;">今日暂无预约</div>'}
+      </div>
+      <div class="card">
+        <div class="card-title">📅 未来预约（${futureSchedules.length}个）</div>
+        ${futureSchedules.length > 0 ? (() => {
+          const grouped = {};
+          futureSchedules.forEach(s => {
+            if (!grouped[s.date]) grouped[s.date] = [];
+            grouped[s.date].push(s);
+          });
+          return Object.entries(grouped).map(([date, items]) => {
+            const dayName = new Date(date).toLocaleDateString('zh-CN', { weekday: 'long' });
+            return `
+              <div style="margin-bottom: 12px;">
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 6px; color: #6a1b9a;">${date} ${dayName}</div>
+                ${items.map(s => {
+                  const mama = mamaList.find(m => m.id === s.mamaId);
+                  return `<div class="record-card" style="margin-bottom: 6px;"><div class="time">${s.start} - ${s.end}</div><div class="type">📋 ${s.project}</div><div class="detail">${mama.room}房 ${mama.name}</div></div>`;
+                }).join('')}
+              </div>
+            `;
+          }).join('');
+        })() : '<div style="text-align:center;color:#999;padding:20px;">暂无未来预约</div>'}
+      </div>
+    `;
+  },
+  history: function() {
+    return `
+      <div class="history-day" id="history-1">
+        <div class="history-day-header" onclick="toggleHistory('history-1')">
+          <div><div class="date">2024年1月16日</div><div class="weekday">星期二</div></div>
+          <div style="font-size: 13px; color: #27ae60;">✓ 已提交</div>
+        </div>
+        <div class="history-day-details">
+          <div style="margin-bottom: 16px; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">📊 今日汇总（全部4位宝妈）</div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: center;">
+              <div><div style="font-size: 20px; font-weight: 600; color: #6a1b9a;">12</div><div style="font-size: 12px; color: #666;">总记录数</div></div>
+              <div><div style="font-size: 20px; font-weight: 600; color: #6a1b9a;">6</div><div style="font-size: 12px; color: #666;">康复项目</div></div>
+              <div><div style="font-size: 20px; font-weight: 600; color: #6a1b9a;">4</div><div style="font-size: 12px; color: #666;">生命体征</div></div>
+              <div><div style="font-size: 20px; font-weight: 600; color: #6a1b9a;">2</div><div style="font-size: 12px; color: #666;">伤口护理</div></div>
+            </div>
+          </div>
+          <div class="record-card"><div class="time">09:00 | 101房 李女士</div><div class="type">🌡️ 生命体征</div><div class="detail">体温36.8°C 脉搏75 血压120/80 正常</div></div>
+          <div class="record-card"><div class="time">09:30 | 102房 王女士</div><div class="type">🌡️ 生命体征</div><div class="detail">体温36.6°C 脉搏72 血压118/78 正常</div></div>
+          <div class="record-card"><div class="time">10:00 | 101房 李女士</div><div class="type">💆 肩颈按摩</div><div class="detail">完成肩颈按摩 效果良好</div></div>
+          <div class="record-card"><div class="time">10:30 | 103房 张女士</div><div class="type">🩹 伤口护理</div><div class="detail">会阴切口 愈合良好 无疼痛 消毒处理</div></div>
+          <div class="record-card"><div class="time">14:00 | 101房 李女士</div><div class="type">🧘 康复项目 - 腹直肌修复</div><div class="detail">完成训练 效果良好</div></div>
+          <div class="record-card"><div class="time">15:00 | 201房 陈女士</div><div class="type">🔥 艾灸</div><div class="detail">完成艾灸治疗 效果良好</div></div>
+        </div>
+        <div class="history-day-toggle" onclick="toggleHistory('history-1')">点击展开详情 ▼</div>
+      </div>
+      <div class="history-day" id="history-2">
+        <div class="history-day-header" onclick="toggleHistory('history-2')">
+          <div><div class="date">2024年1月15日</div><div class="weekday">星期一</div></div>
+          <div style="font-size: 13px; color: #27ae60;">✓ 已提交</div>
+        </div>
+        <div class="history-day-details">
+          <div style="margin-bottom: 16px; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">📊 今日汇总（全部4位宝妈）</div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: center;">
+              <div><div style="font-size: 20px; font-weight: 600; color: #6a1b9a;">14</div><div style="font-size: 12px; color: #666;">总记录数</div></div>
+              <div><div style="font-size: 20px; font-weight: 600; color: #6a1b9a;">7</div><div style="font-size: 12px; color: #666;">康复项目</div></div>
+              <div><div style="font-size: 20px; font-weight: 600; color: #6a1b9a;">4</div><div style="font-size: 12px; color: #666;">生命体征</div></div>
+              <div><div style="font-size: 20px; font-weight: 600; color: #6a1b9a;">3</div><div style="font-size: 12px; color: #666;">伤口护理</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="history-day-toggle" onclick="toggleHistory('history-2')">点击展开详情 ▼</div>
+      </div>
+      <div class="history-day" id="history-3">
+        <div class="history-day-header" onclick="toggleHistory('history-3')">
+          <div><div class="date">2024年1月14日</div><div class="weekday">星期日</div></div>
+          <div style="font-size: 13px; color: #27ae60;">✓ 已提交</div>
+        </div>
+        <div class="history-day-details">
+          <div style="margin-bottom: 16px; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">📊 今日汇总（全部4位宝妈）</div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: center;">
+              <div><div style="font-size: 20px; font-weight: 600; color: #6a1b9a;">11</div><div style="font-size: 12px; color: #666;">总记录数</div></div>
+              <div><div style="font-size: 20px; font-weight: 600; color: #6a1b9a;">5</div><div style="font-size: 12px; color: #666;">康复项目</div></div>
+              <div><div style="font-size: 20px; font-weight: 600; color: #6a1b9a;">4</div><div style="font-size: 12px; color: #666;">生命体征</div></div>
+              <div><div style="font-size: 20px; font-weight: 600; color: #6a1b9a;">2</div><div style="font-size: 12px; color: #666;">伤口护理</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="history-day-toggle" onclick="toggleHistory('history-3')">点击展开详情 ▼</div>
+      </div>
+    `;
+  }
+};
+
+const pageTitles = { home: '首页', schedule: '预约管理', history: '历史记录' };
+
+function showPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('nav-' + page).classList.add('active');
+  document.getElementById('page-title').textContent = pageTitles[page];
+  document.getElementById('content-area').innerHTML = typeof pageTemplates[page] === 'function' ? pageTemplates[page]() : pageTemplates[page];
+  
+  const headerDisplay = document.getElementById('current-mama-display');
+  if (currentMama && page === 'home') {
+    headerDisplay.textContent = '当前查看：' + currentMama.name;
+    headerDisplay.style.display = 'block';
+  } else {
+    headerDisplay.style.display = 'none';
+  }
+}
+
+function selectMama(id) {
+  currentMama = mamaList.find(m => m.id === id);
+  document.getElementById('page-title').textContent = '首页 - ' + currentMama.name;
+  document.getElementById('content-area').innerHTML = pageTemplates.home();
+  document.getElementById('current-mama-display').textContent = '当前查看：' + currentMama.name;
+  document.getElementById('current-mama-display').style.display = 'block';
+  showToast('已切换到：' + currentMama.name);
+}
+
+function showAllMamas() {
+  currentMama = null;
+  document.getElementById('page-title').textContent = '首页';
+  document.getElementById('content-area').innerHTML = pageTemplates.home();
+  document.getElementById('current-mama-display').style.display = 'none';
+}
+
+function openRecord(type) {
+  document.getElementById('modal-' + type).classList.remove('hidden');
+  const inputId = type + '-mama';
+  const input = document.getElementById(inputId);
+  if (input && currentMama) {
+    input.value = currentMama.name;
+    input.style.background = '#f5f5f5';
+  }
+}
+
+function openNewSchedule() {
+  document.getElementById('modal-new-schedule').classList.remove('hidden');
+  // 设置默认日期为今天
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('new-schedule-date').value = today;
+}
+
+function saveSchedule() {
+  const mamaId = parseInt(document.getElementById('new-schedule-mama').value);
+  const date = document.getElementById('new-schedule-date').value;
+  const start = document.getElementById('new-schedule-start').value;
+  const end = document.getElementById('new-schedule-end').value;
+  const project = document.getElementById('new-schedule-project').value;
+  const note = document.getElementById('new-schedule-note').value;
+  
+  if (!mamaId || !date || !start || !end || !project) {
+    showToast('请填写完整信息');
+    return;
+  }
+  
+  const newSchedule = {
+    id: schedules.length + 1,
+    mamaId,
+    date,
+    start,
+    end,
+    project,
+    note
+  };
+  
+  schedules.push(newSchedule);
+  closeModal('modal-new-schedule');
+  showToast('预约已创建');
+  showPage('schedule');
+}
+
+function closeModal(modalId) {
+  if (modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+  } else {
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+  }
+}
+
+function toggleHistory(id) {
+  const day = document.getElementById(id);
+  if (day) {
+    day.classList.toggle('expanded');
+    const toggle = day.querySelector('.history-day-toggle');
+    if (toggle) {
+      if (day.classList.contains('expanded')) {
+        toggle.textContent = '点击收起 ▲';
+      } else {
+        toggle.textContent = '点击展开详情 ▼';
+      }
+    }
+  }
+}
+
+function toggleOpt(el, showId) {
+  el.parentElement.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  if (showId) {
+    const el2 = document.getElementById(showId);
+    if (el2) el2.classList.toggle('hidden', el.textContent === '无' || el.textContent === '否');
+  }
+}
+
+function togglePending(el) {
+  el.classList.toggle('done');
+  el.querySelector('.checkbox').textContent = el.classList.contains('done') ? '✓' : '';
+}
+
+function saveRecord(type) {
+  closeModal();
+  showToast('记录已保存');
+  savedCount++;
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+showPage('home');
+</script>
+</body>
+</html>

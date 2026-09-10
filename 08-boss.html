@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>店长端</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f7fa;display:flex;height:100vh}
+.sidebar{width:180px;background:#1565c0;color:#fff;display:flex;flex-direction:column}
+.sidebar-header{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.sidebar-header h2{font-size:15px}
+.nav-menu{flex:1;padding:12px 0}
+.nav-item{padding:14px 20px;cursor:pointer;font-size:14px}
+.nav-item:hover{background:rgba(255,255,255,0.1)}
+.nav-item.active{background:rgba(255,255,255,0.2)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.header{background:#fff;padding:16px 24px;border-bottom:1px solid #e8e8e8}
+.content{flex:1;overflow-y:auto;padding:20px}
+.card{background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.card-title{font-size:15px;font-weight:600;margin-bottom:16px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.stat-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.08);text-align:center;cursor:pointer}
+.stat-card .num{font-size:28px;font-weight:600;color:#1565c0}
+.stat-card .label{font-size:13px;color:#666;margin-top:4px}
+.btn{padding:6px 14px;border:none;border-radius:6px;font-size:13px;cursor:pointer}
+.btn-primary{background:#1565c0;color:#fff}
+.btn-secondary{background:#f5f5f5;color:#333}
+.btn-sm{padding:4px 10px;font-size:12px}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;margin-right:4px}
+.tag-pending{background:#fff3e0;color:#e65100}
+.tag-signed{background:#e8f5e9;color:#2e7d32}
+.tag-active{background:#e3f2fd;color:#1565c0}
+.money-positive{color:#4caf50;font-weight:600}
+.money-danger{color:#f44336;font-weight:600}
+.table{width:100%;border-collapse:collapse;font-size:13px}
+.table th,.table td{padding:12px 10px;text-align:left;border-bottom:1px solid #f0f0f0}
+.table th{background:#f8f9fa;font-weight:600}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal{background:#fff;border-radius:16px;width:92%;max-width:700px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column}
+.modal-header{padding:16px 20px;border-bottom:1px solid #e8e8e8;display:flex;justify-content:space-between;align-items:center}
+.modal-body{padding:20px;overflow-y:auto;flex:1}
+.modal-footer{padding:16px 20px;border-top:1px solid #e8e8e8;display:flex;justify-content:flex-end;gap:8px}
+.hidden{display:none!important}
+.sub-nav{display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid #e0e0e0;padding-bottom:8px}
+.sub-nav-item{padding:8px 16px;cursor:pointer;border-radius:20px;font-size:13px}
+.sub-nav-item.active{background:#1565c0;color:#fff}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-header"><h2>🏥 月子中心</h2><p>店长端原型</p></div>
+  <div class="nav-menu">
+    <div class="nav-item active" id="nav-home" onclick="showPage('home')">🏠 首页</div>
+    <div class="nav-item" id="nav-customers" onclick="showPage('customers')">👥 客户管理</div>
+    <div class="nav-item" id="nav-sales" onclick="showPage('sales')">📈 销售跟踪</div>
+    <div class="nav-item" id="nav-finance" onclick="showPage('finance')">💰 财务概览</div>
+    <div class="nav-item" id="nav-staff" onclick="showPage('staff')">👤 员工绩效</div>
+    <div class="nav-item" id="nav-kitchen" onclick="showPage('kitchen')">🍽️ 厨房监督</div>
+  </div>
+  <div style="padding:16px;border-top:1px solid rgba(255,255,255,0.1);font-size:11px;color:rgba(255,255,255,0.6);text-align:center">店长：张店长</div>
+</div>
+<div class="main">
+  <div class="header"><h1 id="page-title">首页</h1></div>
+  <div class="content" id="content-area"></div>
+</div>
+<div id="modal-customer" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header"><h3 id="customer-modal-title">客户详情</h3><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-customer')">关闭</button></div>
+    <div class="modal-body" id="customer-modal-content"></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-customer')">关闭</button></div>
+  </div>
+</div>
+<script>
+var currentPage='home';
+var currentCustomer=null;
+var currentSalesId=1;
+var currentCustomerTab='potential';
+
+var salesStaff=[
+  {id:1,name:'王销售',phone:'138****1234'},
+  {id:2,name:'李销售',phone:'139****5678'},
+  {id:3,name:'张销售',phone:'137****9012'}
+];
+
+var customers=[
+  {id:1,name:'陈女士',phone:'136****0001',source:'转介绍',status:'potential',followSalesId:1,followStatus:'跟进中',contactTime:'2024-01-15',intent:'high',expectDate:'2024-02-15',note:'二胎，已咨询套餐详情',followups:[{time:'2024-01-10',person:'陈女士',method:'电话',content:'初次联系，询问套餐价格',nextPlan:'3天内发送详细方案'},{time:'2024-01-15',person:'陈女士',method:'微信',content:'发送了套餐介绍和价格表',nextPlan:'预约到店参观'}]},
+  {id:2,name:'刘女士',phone:'135****0002',source:'线上',status:'potential',followSalesId:1,followStatus:'已报价',contactTime:'2024-01-14',intent:'high',expectDate:'2024-02-10',note:'一胎，比较意向',followups:[{time:'2024-01-12',person:'刘女士',method:'微信',content:'朋友介绍过来咨询',nextPlan:'安排参观'},{time:'2024-01-14',person:'刘女士',method:'面谈',content:'到店参观，详细介绍套餐',nextPlan:'等待签约'}]},
+  {id:3,name:'杨女士',phone:'133****0003',source:'线下',status:'potential',followSalesId:2,followStatus:'跟进中',contactTime:'2024-01-13',intent:'medium',expectDate:'2024-03-01',note:'预产期较晚',followups:[{time:'2024-01-13',person:'杨女士',method:'电话',content:'电话初步咨询',nextPlan:'微信发送资料'}]},
+  {id:4,name:'黄女士',phone:'132****0004',source:'线上',status:'potential',followSalesId:3,followStatus:'跟进中',contactTime:'2024-01-10',intent:'low',expectDate:'2024-04-01',note:'只是问问',followups:[{time:'2024-01-10',person:'黄女士',method:'微信',content:'简单咨询',nextPlan:'待定'}]},
+  {id:5,name:'周女士',phone:'131****0005',source:'转介绍',status:'potential',followSalesId:3,followStatus:'已流失',contactTime:'2024-01-08',intent:'medium',expectDate:'2024-02-20',note:'选了别家',followups:[{time:'2024-01-05',person:'周女士',method:'电话',content:'介绍套餐',nextPlan:'跟进'},{time:'2024-01-08',person:'周女士',method:'微信',content:'客户表示已选其他机构',nextPlan:'结束跟进'}]},
+  {id:6,name:'吴女士',phone:'138****0006',source:'线上',status:'signed',followSalesId:1,room:'101',package:'尊享套餐',deposit:5000,depositTime:'2024-01-15',expectDate:'2024-02-01',tailFee:15000,tailPaid:0},
+  {id:7,name:'孙女士',phone:'139****0007',source:'转介绍',status:'signed',followSalesId:2,room:'102',package:'豪华套餐',deposit:8000,depositTime:'2024-01-14',expectDate:'2024-02-05',tailFee:22000,tailPaid:0},
+  {id:8,name:'李女士',phone:'136****0008',source:'线下',status:'active',followSalesId:1,room:'101',package:'尊享套餐',deposit:5000,depositTime:'2024-01-10',expectDate:'2024-01-20',tailFee:15000,tailPaid:15000,tailTime:'2024-01-20',depositReturn:3000,babyStaff:'育婴师-李老师',momStaff:'产康师-李老师',stayDays:3,exceptions:[{time:'2024-01-16 14:00',content:'宝宝体温37.8°C',status:'处理中'}],suggestions:[{time:'2024-01-16 08:30',content:'希望晚餐能增加汤品',status:'待处理'}]},
+  {id:9,name:'张女士',phone:'137****0009',source:'线上',status:'active',followSalesId:2,room:'103',package:'豪华套餐',deposit:8000,depositTime:'2024-01-08',expectDate:'2024-01-15',tailFee:22000,tailPaid:22000,tailTime:'2024-01-15',depositReturn:0,babyStaff:'育婴师-王老师',momStaff:'产康师-张老师',stayDays:8,exceptions:[{time:'2024-01-16 11:30',content:'剖腹产伤口红肿',status:'处理中'}],suggestions:[]},
+  {id:10,name:'王女士',phone:'135****0010',source:'转介绍',status:'active',followSalesId:3,room:'201',package:'标准套餐',deposit:3000,depositTime:'2024-01-05',expectDate:'2024-01-12',tailFee:12000,tailPaid:12000,tailTime:'2024-01-12',depositReturn:2000,babyStaff:'育婴师-李老师',momStaff:'产康师-张老师',stayDays:12,exceptions:[],suggestions:[]},
+  {id:11,name:'赵女士',phone:'134****0011',source:'线上',status:'checkedout',followSalesId:1,room:'102',package:'豪华套餐',deposit:8000,depositTime:'2023-12-20',expectDate:'2023-12-28',tailFee:22000,tailPaid:22000,tailTime:'2023-12-28',depositReturn:3000,babyStaff:'育婴师-王老师',momStaff:'产康师-李老师',stayDays:28,checkedOut:true,checkOutDate:'2024-01-15',satisfaction:'满意',feedback:'服务很好'},
+  {id:12,name:'郑女士',phone:'133****0012',source:'转介绍',status:'checkedout',followSalesId:2,room:'103',package:'尊享套餐',deposit:5000,depositTime:'2023-12-15',expectDate:'2023-12-22',tailFee:15000,tailPaid:15000,tailTime:'2023-12-22',depositReturn:1000,babyStaff:'育婴师-李老师',momStaff:'产康师-张老师',stayDays:21,checkedOut:true,checkOutDate:'2024-01-10',satisfaction:'满意',feedback:'非常满意'}
+];
+
+function showPage(page){
+  currentPage=page;
+  var items=document.querySelectorAll('.nav-item');
+  for(var i=0;i<items.length;i++){items[i].classList.remove('active');}
+  var navEl=document.getElementById('nav-'+page);
+  if(navEl){navEl.classList.add('active');}
+  document.getElementById('page-title').textContent=page=='home'?'首页':page=='customers'?'客户管理':page=='sales'?'销售跟踪':page=='finance'?'财务概览':page=='staff'?'员工绩效':'厨房监督';
+  var contentArea=document.getElementById('content-area');
+  if(page=='home'){contentArea.innerHTML=renderHome();}
+  else if(page=='customers'){contentArea.innerHTML=renderCustomers();}
+  else if(page=='sales'){contentArea.innerHTML=renderSales();}
+  else if(page=='finance'){contentArea.innerHTML=renderFinance();}
+  else if(page=='staff'){contentArea.innerHTML=renderStaff();}
+  else if(page=='kitchen'){contentArea.innerHTML=renderKitchen();}
+}
+
+function renderHome(){
+  var potential=customers.filter(function(c){return c.status=='potential';}).length;
+  var signed=customers.filter(function(c){return c.status=='signed';}).length;
+  var active=customers.filter(function(c){return c.status=='active';}).length;
+  var checkedout=customers.filter(function(c){return c.checkedOut;}).length;
+  var pendingTail=customers.filter(function(c){return c.status=='signed'&&!c.tailPaid;}).reduce(function(s,c){return s+(c.tailFee||0);},0);
+  var html='<div class="stat-grid">';
+  html+='<div class="stat-card" onclick="showPage(\'customers\');switchTab(\'potential\')"><div class="num">'+potential+'</div><div class="label">潜在客户</div></div>';
+  html+='<div class="stat-card" onclick="showPage(\'customers\');switchTab(\'signed\')"><div class="num">'+signed+'</div><div class="label">已签约未入住</div></div>';
+  html+='<div class="stat-card" onclick="showPage(\'customers\');switchTab(\'active\')"><div class="num">'+active+'</div><div class="label">在住客户</div></div>';
+  html+='<div class="stat-card" onclick="showPage(\'customers\');switchTab(\'checkedout\')"><div class="num">'+checkedout+'</div><div class="label">已离店</div></div>';
+  html+='</div>';
+  html+='<div class="stat-grid">';
+  html+='<div class="stat-card"><div class="num">¥'+(pendingTail/10000).toFixed(1)+'万</div><div class="label">待收尾款</div></div>';
+  html+='<div class="stat-card"><div class="num">2</div><div class="label">今日异常</div></div>';
+  html+='<div class="stat-card"><div class="num">1</div><div class="label">今日建议</div></div>';
+  html+='<div class="stat-card"><div class="num">4</div><div class="label">在住宝妈</div></div>';
+  html+='</div>';
+  html+='<div class="card"><div class="card-title"><span>👥 销售团队</span></div>';
+  html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">';
+  for(var i=0;i<salesStaff.length;i++){
+    var s=salesStaff[i];
+    var myPotential=customers.filter(function(c){return c.followSalesId==s.id&&c.status=='potential';}).length;
+    var mySigned=customers.filter(function(c){return c.followSalesId==s.id&&c.status=='signed';}).length;
+    var myActive=customers.filter(function(c){return c.followSalesId==s.id&&c.status=='active';}).length;
+    var overdue=customers.filter(function(c){return c.followSalesId==s.id&&c.status=='potential'&&c.followStatus=='跟进中';}).length;
+    html+='<div style="background:#f8f9fa;border-radius:10px;padding:14px;border-left:3px solid #1565c0;cursor:pointer;" onclick="showPage(\'sales\');selectSales('+s.id+')">';
+    html+='<div style="font-weight:600;margin-bottom:8px;">'+s.name+(overdue>0?' <span style="color:#ff9800;font-size:11px;">⚠️'+overdue+'人未跟进</span>':'')+'</div>';
+    html+='<div style="font-size:12px;color:#666;">潜在:'+myPotential+' 签约:'+mySigned+' 在住:'+myActive+'</div>';
+    html+='</div>';
+  }
+  html+='</div></div>';
+  html+='<div class="card"><div class="card-title"><span>📊 客户转化漏斗</span></div>';
+  html+='<div style="display:flex;align-items:center;justify-content:space-around;padding:20px;">';
+  html+='<div style="text-align:center;"><div style="font-size:32px;font-weight:600;color:#1565c0;">'+potential+'</div><div style="font-size:13px;color:#666;">潜在客户</div></div>';
+  html+='<div style="font-size:24px;color:#ccc;">→</div>';
+  html+='<div style="text-align:center;"><div style="font-size:32px;font-weight:600;color:#ff9800;">'+signed+'</div><div style="font-size:13px;color:#666;">已签约</div></div>';
+  html+='<div style="font-size:24px;color:#ccc;">→</div>';
+  html+='<div style="text-align:center;"><div style="font-size:32px;font-weight:600;color:#4caf50;">'+active+'</div><div style="font-size:13px;color:#666;">在住客户</div></div>';
+  html+='<div style="font-size:24px;color:#ccc;">→</div>';
+  html+='<div style="text-align:center;"><div style="font-size:32px;font-weight:600;color:#666;">'+checkedout+'</div><div style="font-size:13px;color:#666;">已离店</div></div>';
+  html+='</div></div>';
+  return html;
+}
+
+function renderCustomers(){
+  var tabs=[{key:'potential',label:'潜在客户',count:customers.filter(function(c){return c.status=='potential';}).length},{key:'signed',label:'已签约未入住',count:customers.filter(function(c){return c.status=='signed';}).length},{key:'active',label:'在住客户',count:customers.filter(function(c){return c.status=='active';}).length},{key:'checkedout',label:'已离店',count:customers.filter(function(c){return c.checkedOut;}).length}];
+  var html='<div class="sub-nav">';
+  for(var i=0;i<tabs.length;i++){
+    html+='<div class="sub-nav-item'+(currentCustomerTab==tabs[i].key?' active':'')+'" onclick="switchTab(\''+tabs[i].key+'\')">'+tabs[i].label+' ('+tabs[i].count+')</div>';
+  }
+  html+='</div>';
+  html+='<div class="card"><div class="card-title"><span>👥 客户列表</span></div>';
+  html+='<table class="table"><thead><tr><th>姓名</th><th>来源</th>';
+  if(currentCustomerTab=='potential'){html+='<th>跟进销售</th><th>状态</th><th>意向</th><th>最近联系</th>';
+  }else{html+='<th>房号</th><th>套餐</th>';
+  }
+  if(currentCustomerTab=='active'){html+='<th>育婴师</th><th>产康师</th><th>天数</th><th>状态</th>';
+  }
+  html+='<th>操作</th></tr></thead><tbody>';
+  var list=customers.filter(function(c){
+    if(currentCustomerTab=='potential')return c.status=='potential';
+    if(currentCustomerTab=='signed')return c.status=='signed';
+    if(currentCustomerTab=='active')return c.status=='active';
+    if(currentCustomerTab=='checkedout')return c.checkedOut;
+    return false;
+  });
+  for(var i=0;i<list.length;i++){
+    var c=list[i];
+    var sales=salesStaff.find(function(s){return s.id==c.followSalesId;});
+    html+='<tr>';
+    html+='<td><strong>'+c.name+'</strong><br><span style="font-size:11px;color:#999;">'+c.phone+'</span></td>';
+    html+='<td><span class="tag tag-'+(c.source=='线上'?'pending':'active')+'">'+c.source+'</span></td>';
+    if(currentCustomerTab=='potential'){
+      html+='<td>'+sales.name+'</td>';
+      html+='<td><span class="tag tag-'+(c.followStatus=='已报价'?'signed':c.followStatus=='已流失'?'pending':'pending')+'">'+c.followStatus+'</span></td>';
+      html+='<td><span class="tag tag-'+c.intent+'">'+(c.intent=='high'?'高':c.intent=='medium'?'中':'低')+'</span></td>';
+      html+='<td>'+c.contactTime+'</td>';
+    }else{
+      html+='<td>'+c.room+'房</td>';
+      html+='<td><span class="tag tag-signed">'+c.package+'</span></td>';
+    }
+    if(currentCustomerTab=='active'){
+      html+='<td>'+c.babyStaff+'</td>';
+      html+='<td>'+c.momStaff+'</td>';
+      html+='<td><strong>'+c.stayDays+'</strong>天</td>';
+      var exc=(c.exceptions||[]).filter(function(e){return e.status!='已处理';}).length;
+      var sug=(c.suggestions||[]).filter(function(s){return s.status!='已处理';}).length;
+      html+='<td>'+(exc>0||sug>0?'<span style="color:#ff9800;">⚠️ '+exc+'异常'+(sug>0?'+'+sug+'建议':'')+'</span>':'<span style="color:#4caf50;">✓ 正常</span>')+'</td>';
+    }
+    html+='<td><button class="btn btn-primary btn-sm" onclick="viewCustomer('+c.id+')">详情</button></td>';
+    html+='</tr>';
+  }
+  html+='</tbody></table></div>';
+  return html;
+}
+
+function renderSales(){
+  var sales=salesStaff.find(function(s){return s.id==currentSalesId;});
+  var myCustomers=customers.filter(function(c){return c.followSalesId==currentSalesId;});
+  var potential=myCustomers.filter(function(c){return c.status=='potential';});
+  var signed=myCustomers.filter(function(c){return c.status=='signed';});
+  var active=myCustomers.filter(function(c){return c.status=='active';});
+  var overdue=potential.filter(function(c){return c.followStatus=='跟进中';});
+  var html='<div style="margin-bottom:16px;"><label style="font-size:13px;color:#666;margin-right:8px;">选择销售:</label><select id="sales-select" onchange="selectSales(this.value)" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;">';
+  for(var i=0;i<salesStaff.length;i++){
+    html+='<option value="'+salesStaff[i].id+'"'+(salesStaff[i].id==currentSalesId?' selected':'')+'>'+salesStaff[i].name+'</option>';
+  }
+  html+='</select></div>';
+  html+='<h3 style="margin-bottom:16px;">'+sales.name+' - 销售跟踪</h3>';
+  html+='<div class="stat-grid">';
+  html+='<div class="stat-card"><div class="num">'+potential.length+'</div><div class="label">潜在客户</div></div>';
+  html+='<div class="stat-card"><div class="num">'+signed.length+'</div><div class="label">已签约</div></div>';
+  html+='<div class="stat-card"><div class="num">'+active.length+'</div><div class="label">本月成交</div></div>';
+  html+='<div class="stat-card"><div class="num">'+overdue.length+'</div><div class="label">待跟进</div></div>';
+  html+='</div>';
+  html+='<div class="card"><div class="card-title"><span>📋 客户明细</span></div>';
+  html+='<table class="table"><thead><tr><th>客户</th><th>状态</th><th>套餐</th><th>定金</th><th>尾款</th><th>操作</th></tr></thead><tbody>';
+  for(var i=0;i<potential.length;i++){
+    var c=potential[i];
+    html+='<tr><td><strong>'+c.name+'</strong></td><td><span class="tag tag-pending">'+c.followStatus+'</span></td><td>-</td><td>-</td><td>-</td><td><button class="btn btn-primary btn-sm" onclick="viewSalesFollowup('+c.id+')">跟进详情</button></td></tr>';
+  }
+  for(var i=0;i<signed.length;i++){
+    var c=signed[i];
+    html+='<tr><td><strong>'+c.name+'</strong></td><td><span class="tag tag-signed">已签约</span></td><td>'+c.package+'</td><td class="money-positive">¥'+c.deposit+'</td><td class="money-danger">¥'+c.tailPaid+'/¥'+c.tailFee+'</td><td><button class="btn btn-primary btn-sm" onclick="viewSalesFollowup('+c.id+')">详情</button></td></tr>';
+  }
+  for(var i=0;i<active.length;i++){
+    var c=active[i];
+    html+='<tr><td><strong>'+c.name+'</strong></td><td><span class="tag tag-active">在住</span></td><td>'+c.package+'</td><td class="money-positive">¥'+c.deposit+'</td><td class="money-positive">¥'+c.tailPaid+'</td><td><button class="btn btn-primary btn-sm" onclick="viewSalesFollowup('+c.id+')">详情</button></td></tr>';
+  }
+  html+='</tbody></table></div>';
+  return html;
+}
+
+function renderFinance(){
+  var active=customers.filter(function(c){return c.status=='active';});
+  var signed=customers.filter(function(c){return c.status=='signed';});
+  var totalDeposit=active.concat(signed).reduce(function(s,c){return s+(c.deposit||0);},0);
+  var totalTail=active.reduce(function(s,c){return s+(c.tailPaid||0);},0);
+  var pendingTail=signed.reduce(function(s,c){return s+(c.tailFee-c.tailPaid||0);},0);
+  var html='<div class="stat-grid">';
+  html+='<div class="stat-card"><div class="num">¥'+((totalDeposit+totalTail)/10000).toFixed(1)+'万</div><div class="label">已收金额</div></div>';
+  html+='<div class="stat-card"><div class="num">¥'+(pendingTail/10000).toFixed(1)+'万</div><div class="label">待收尾款</div></div>';
+  html+='<div class="stat-card"><div class="num">'+(active.length+signed.length)+'</div><div class="label">在店客户</div></div>';
+  html+='<div class="stat-card"><div class="num">¥3.0万</div><div class="label">待退押金</div></div>';
+  html+='</div>';
+  html+='<div class="card"><div class="card-title"><span>👥 按销售汇总</span></div>';
+  html+='<table class="table"><thead><tr><th>销售</th><th>负责客户</th><th>定金收入</th><th>尾款收入</th><th>总收入</th></tr></thead><tbody>';
+  for(var i=0;i<salesStaff.length;i++){
+    var s=salesStaff[i];
+    var myCustomers=customers.filter(function(c){return c.followSalesId==s.id&&(c.status=='active'||c.status=='signed'||c.checkedOut);});
+    var myDeposit=myCustomers.reduce(function(sum,c){return sum+(c.deposit||0);},0);
+    var myTail=myCustomers.reduce(function(sum,c){return sum+(c.tailPaid||0);},0);
+    html+='<tr><td><strong>'+s.name+'</strong></td><td>'+myCustomers.length+'人</td><td class="money-positive">¥'+myDeposit+'</td><td class="money-positive">¥'+myTail+'</td><td><strong class="money-positive">¥'+(myDeposit+myTail)+'</strong></td></tr>';
+  }
+  html+='</tbody></table></div>';
+  return html;
+}
+
+function renderStaff(){
+  var html='<div class="card"><div class="card-title"><span>👤 员工档案</span></div>';
+  html+='<div style="background:#f8f9fa;border-radius:10px;padding:14px;margin-bottom:12px;">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:600;">育婴师-李老师</span><button class="btn btn-primary btn-sm" onclick="viewStaff(1)">查看详情</button></div>';
+  html+='<div style="font-size:13px;color:#666;">当前服务房间：<strong>101房、103房</strong></div>';
+  html+='<div style="font-size:13px;color:#666;margin-top:4px;">当前服务客户：李女士（101房）、张女士（103房）</div>';
+  html+='</div>';
+  html+='<div style="background:#f8f9fa;border-radius:10px;padding:14px;margin-bottom:12px;">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:600;">育婴师-王老师</span><button class="btn btn-primary btn-sm" onclick="viewStaff(2)">查看详情</button></div>';
+  html+='<div style="font-size:13px;color:#666;">当前服务房间：<strong>102房</strong></div>';
+  html+='<div style="font-size:13px;color:#666;margin-top:4px;">当前服务客户：王女士（201房）</div>';
+  html+='</div>';
+  html+='<div style="background:#f8f9fa;border-radius:10px;padding:14px;margin-bottom:12px;">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:600;">产康师-李老师</span><button class="btn btn-primary btn-sm" onclick="viewStaff(3)">查看详情</button></div>';
+  html+='<div style="font-size:13px;color:#666;">当前服务房间：<strong>101房</strong></div>';
+  html+='<div style="font-size:13px;color:#666;margin-top:4px;">当前服务客户：李女士（101房）</div>';
+  html+='</div>';
+  html+='<div style="background:#f8f9fa;border-radius:10px;padding:14px;margin-bottom:12px;">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><span style="font-weight:600;">产康师-张老师</span><button class="btn btn-primary btn-sm" onclick="viewStaff(4)">查看详情</button></div>';
+  html+='<div style="font-size:13px;color:#666;">当前服务房间：<strong>102房、103房</strong></div>';
+  html+='<div style="font-size:13px;color:#666;margin-top:4px;">当前服务客户：张女士（103房）</div>';
+  html+='</div>';
+  html+='</div>';
+  return html;
+}
+
+function renderKitchen(){
+  var html='<div class="card"><div class="card-title"><span>📅 本周菜单</span></div>';
+  html+='<table class="table"><thead><tr><th>日期</th><th>菜单</th></tr></thead><tbody>';
+  var menus=[{day:'周一',menu:'小米粥、鸡蛋、鲫鱼汤、蔬菜'},{day:'周二',menu:'红豆粥、饺子、排骨汤、蔬菜'},{day:'周三',menu:'南瓜粥、馄饨、鸡汤、蔬菜'},{day:'周四',menu:'八宝粥、包子、鱼汤、水果'},{day:'周五',menu:'紫薯粥、鸡蛋、鸡汤、蔬菜'},{day:'周六',menu:'花生粥、饺子、排骨汤、甜点'},{day:'周日',menu:'桂圆粥、鸡蛋、鱼汤、水果'}];
+  for(var i=0;i<menus.length;i++){
+    html+='<tr><td>'+menus[i].day+'</td><td>'+menus[i].menu+'</td></tr>';
+  }
+  html+='</tbody></table></div>';
+  html+='<div class="card"><div class="card-title"><span>🍽️ 特殊饮食需求</span></div>';
+  html+='<table class="table"><thead><tr><th>房间</th><th>姓名</th><th>需求</th><th>原因</th><th>状态</th></tr></thead><tbody>';
+  html+='<tr><td>101房</td><td><strong>李女士</strong></td><td>低盐饮食</td><td>高血压风险</td><td><span class="tag tag-signed">已通知厨房</span></td></tr>';
+  html+='<tr><td>103房</td><td><strong>张女士</strong></td><td>催乳餐</td><td>泌乳不足</td><td><span class="tag tag-signed">已通知厨房</span></td></tr>';
+  html+='</tbody></table></div>';
+  return html;
+}
+
+function switchTab(tab){
+  currentCustomerTab=tab;
+  showPage('customers');
+}
+
+function selectSales(id){
+  currentSalesId=parseInt(id);
+  showPage('sales');
+}
+
+function viewCustomer(id){
+  var c=null;
+  for(var i=0;i<customers.length;i++){if(customers[i].id==id){c=customers[i];break;}}
+  if(!c)return;
+  var sales=salesStaff.find(function(s){return s.id==c.followSalesId;});
+  var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">';
+  html+='<div><div style="margin-bottom:12px;"><span style="color:#666;font-size:12px;">姓名</span><br><strong>'+c.name+'</strong></div>';
+  html+='<div style="margin-bottom:12px;"><span style="color:#666;font-size:12px;">电话</span><br>'+c.phone+'</div>';
+  html+='<div style="margin-bottom:12px;"><span style="color:#666;font-size:12px;">来源</span><br><span class="tag tag-'+(c.source=='线上'?'pending':'active')+'">'+c.source+'</span></div>';
+  html+='<div style="margin-bottom:12px;"><span style="color:#666;font-size:12px;">跟进销售</span><br>'+sales.name+'</div></div>';
+  html+='<div><div style="margin-bottom:12px;"><span style="color:#666;font-size:12px;">状态</span><br><span class="tag tag-'+(c.status=='potential'?'pending':c.status=='signed'?'signed':c.status=='active'?'active':'signed')+'">'+(c.status=='potential'?'潜在客户':c.status=='signed'?'已签约':c.status=='active'?'在住':'已离店')+'</span></div>';
+  html+='<div style="margin-bottom:12px;"><span style="color:#666;font-size:12px;">房间</span><br>'+c.room+'</div>';
+  html+='<div style="margin-bottom:12px;"><span style="color:#666;font-size:12px;">套餐</span><br>'+c.package+'</div>';
+  html+='<div style="margin-bottom:12px;"><span style="color:#666;font-size:12px;">预计入住</span><br>'+c.expectDate+'</div></div></div>';
+  if(c.note){html+='<div style="margin-top:12px;padding:12px;background:#f8f9fa;border-radius:8px;font-size:13px;"><strong>备注：</strong>'+c.note+'</div>';
+  }
+  if(c.exceptions&&c.exceptions.length>0){
+    html+='<div style="margin-top:16px;"><h4 style="margin-bottom:12px;font-size:14px;color:#f44336;">⚠️ 异常上报</h4>';
+    for(var i=0;i<c.exceptions.length;i++){
+      html+='<div style="background:#ffebee;border-radius:8px;padding:12px;margin-bottom:8px;font-size:13px;"><div style="font-size:11px;color:#999;margin-bottom:4px;">'+c.exceptions[i].time+'</div><div>'+c.exceptions[i].content+'</div><div style="font-size:11px;color:#ff9800;margin-top:4px;">状态：'+c.exceptions[i].status+'</div></div>';
+    }
+    html+='</div>';
+  }
+  if(c.suggestions&&c.suggestions.length>0){
+    html+='<div style="margin-top:16px;"><h4 style="margin-bottom:12px;font-size:14px;color:#1565c0;">💬 客户建议</h4>';
+    for(var i=0;i<c.suggestions.length;i++){
+      html+='<div style="background:#e3f2fd;border-radius:8px;padding:12px;margin-bottom:8px;font-size:13px;"><div style="font-size:11px;color:#999;margin-bottom:4px;">'+c.suggestions[i].time+'</div><div>'+c.suggestions[i].content+'</div><div style="font-size:11px;color:#ff9800;margin-top:4px;">状态：'+c.suggestions[i].status+'</div></div>';
+    }
+    html+='</div>';
+  }
+  if(c.followups&&c.followups.length>0){
+    html+='<div style="margin-top:16px;"><h4 style="margin-bottom:12px;font-size:14px;">📋 跟进记录</h4>';
+    for(var i=0;i<c.followups.length;i++){
+      html+='<div style="padding:10px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;font-size:13px;"><div style="font-size:11px;color:#999;">'+c.followups[i].time+' · '+c.followups[i].method+'</div><div style="margin-top:4px;">'+c.followups[i].content+'</div><div style="font-size:11px;color:#666;margin-top:4px;">下次：'+c.followups[i].nextPlan+'</div></div>';
+    }
+    html+='</div>';
+  }
+  if(c.status=='potential'){
+    html+='<div style="margin-top:16px;padding-top:16px;border-top:1px solid #e0e0e0;"><button class="btn btn-success btn-sm" onclick="markSigned('+c.id+')">标记签约</button><button class="btn btn-danger btn-sm" onclick="markLost('+c.id+')" style="margin-left:8px;">标记流失</button></div>';
+  }
+  if(c.status=='signed'){
+    html+='<div style="margin-top:16px;padding-top:16px;border-top:1px solid #e0e0e0;"><button class="btn btn-success btn-sm" onclick="markActive('+c.id+')">确认入住</button></div>';
+  }
+  document.getElementById('customer-modal-title').textContent=c.name+' - 客户详情';
+  document.getElementById('customer-modal-content').innerHTML=html;
+  document.getElementById('modal-customer').classList.remove('hidden');
+}
+
+function viewSalesFollowup(id){
+  var c=null;
+  for(var i=0;i<customers.length;i++){if(customers[i].id==id){c=customers[i];break;}}
+  if(!c)return;
+  var sales=salesStaff.find(function(s){return s.id==c.followSalesId;});
+  var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">';
+  html+='<div><div style="margin-bottom:12px;"><span style="color:#666;font-size:12px;">姓名</span><br><strong>'+c.name+'</strong></div>';
+  html+='<div style="margin-bottom:12px;"><span style="color:#666;font-size:12px;">电话</span><br>'+c.phone+'</div></div>';
+  html+='<div><div style="margin-bottom:12px;"><span style="color:#666;font-size:12px;">跟进销售</span><br>'+sales.name+'</div>';
+  html+='<div style="margin-bottom:12px;"><span style="color:#666;font-size:12px;">跟进状态</span><br><span class="tag tag-'+(c.followStatus=='已报价'?'signed':'pending')+'">'+c.followStatus+'</span></div></div></div>';
+  if(c.note){html+='<div style="margin-top:12px;padding:12px;background:#f8f9fa;border-radius:8px;font-size:13px;"><strong>备注：</strong>'+c.note+'</div>';
+  }
+  if(c.followups&&c.followups.length>0){
+    html+='<div style="margin-top:16px;"><h4 style="margin-bottom:12px;font-size:14px;">📋 跟进时间线</h4>';
+    for(var i=0;i<c.followups.length;i++){
+      html+='<div style="padding:10px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;font-size:13px;"><div style="font-size:11px;color:#999;">'+c.followups[i].time+' · '+c.followups[i].method+'</div><div style="margin-top:4px;">'+c.followups[i].content+'</div><div style="font-size:11px;color:#666;margin-top:4px;">下次：'+c.followups[i].nextPlan+'</div></div>';
+    }
+    html+='</div>';
+  }else{
+    html+='<div style="margin-top:16px;text-align:center;color:#999;">暂无跟进记录</div>';
+  }
+  if(c.status=='potential'){
+    html+='<div style="margin-top:16px;padding-top:16px;border-top:1px solid #e0e0e0;"><button class="btn btn-success btn-sm" onclick="markSignedFromSales('+c.id+')">标记签约</button></div>';
+  }
+  document.getElementById('customer-modal-title').textContent=c.name+' - 跟进详情';
+  document.getElementById('customer-modal-content').innerHTML=html;
+  document.getElementById('modal-customer').classList.remove('hidden');
+}
+
+function viewStaff(id){
+  var html='<div style="background:#f8f9fa;border-radius:10px;padding:14px;margin-bottom:12px;">';
+  html+='<div style="font-weight:600;margin-bottom:8px;">育婴师-李老师</div>';
+  html+='<div style="font-size:13px;color:#666;">当前服务房间：101房、103房</div>';
+  html+='<div style="font-size:13px;color:#666;margin-top:4px;">当前服务客户：李女士（101房）、张女士（103房）</div>';
+  html+='<div style="margin-top:12px;font-size:13px;"><strong>历史服务：</strong></div>';
+  html+='<div style="font-size:12px;color:#666;margin-top:4px;">· 王女士（102房）2023-10-01至2023-11-28（58天）好评</div>';
+  html+='<div style="font-size:12px;color:#666;">· 周女士（101房）2023-08-01至2023-09-30（30天）满意</div>';
+  html+='</div>';
+  document.getElementById('customer-modal-title').textContent='员工详情';
+  document.getElementById('customer-modal-content').innerHTML=html;
+  document.getElementById('modal-customer').classList.remove('hidden');
+}
+
+function markSigned(id){
+  for(var i=0;i<customers.length;i++){if(customers[i].id==id){customers[i].status='signed';break;}}
+  showToast('已标记为签约客户');
+  closeModal('modal-customer');
+  showPage('customers');
+}
+
+function markLost(id){
+  for(var i=0;i<customers.length;i++){if(customers[i].id==id){customers[i].followStatus='已流失';break;}}
+  showToast('已标记为流失客户');
+  closeModal('modal-customer');
+  showPage('customers');
+}
+
+function markActive(id){
+  for(var i=0;i<customers.length;i++){if(customers[i].id==id){customers[i].status='active';customers[i].stayDays=1;break;}}
+  showToast('已确认入住');
+  closeModal('modal-customer');
+  showPage('customers');
+}
+
+function markSignedFromSales(id){
+  for(var i=0;i<customers.length;i++){if(customers[i].id==id){customers[i].status='signed';break;}}
+  showToast('已标记为签约客户');
+  closeModal('modal-customer');
+  showPage('sales');
+}
+
+function closeModal(modalId){
+  document.getElementById(modalId).classList.add('hidden');
+}
+
+function showToast(msg){
+  var t=document.createElement('div');
+  t.className='toast';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){t.remove();},3000);
+}
+
+showPage('home');
+</script>
+</body>
+</html>
